@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:neom_commons/commons/ui/widgets/handled_cached_network_image.dart';
-import 'package:neom_commons/commons/ui/widgets/rating_heart_bar.dart';
-import 'package:neom_commons/commons/utils/app_utilities.dart';
-import 'package:neom_commons/commons/utils/constants/app_page_id_constants.dart';
-import 'package:neom_commons/commons/utils/constants/app_translation_constants.dart';
-import 'package:neom_core/core/domain/model/neom/chamber_preset.dart';
-import 'package:neom_core/core/utils/constants/app_route_constants.dart';
+import 'package:neom_commons/ui/widgets/handled_cached_network_image.dart';
+import 'package:neom_commons/ui/widgets/rating_heart_bar.dart';
+import 'package:neom_commons/utils/app_utilities.dart';
+import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
+import 'package:neom_commons/utils/constants/app_translation_constants.dart';
+import 'package:neom_core/domain/model/neom/chamber_preset.dart';
+import 'package:neom_core/utils/constants/app_route_constants.dart';
 
 import '../../mate_details_controller.dart';
 

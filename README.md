@@ -1,2 +1,2 @@
-# neom_profile
-Profile and Mate for current social network apps.
+# neom_mates
+Mate Profile Details for Open Neom.

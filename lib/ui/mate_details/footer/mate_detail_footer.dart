@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:neom_commons/commons/app_flavour.dart';
-import 'package:neom_commons/commons/ui/theme/app_theme.dart';
-import 'package:neom_commons/commons/utils/constants/app_constants.dart';
-import 'package:neom_core/core/utils/enums/app_in_use.dart';
+import 'package:neom_commons/ui/theme/app_theme.dart';
+import 'package:neom_commons/utils/constants/app_constants.dart';
+import 'package:neom_core/app_config.dart';
+import 'package:neom_core/utils/enums/app_in_use.dart';
 
 import '../../../utils/mate_constants.dart';
 import '../mate_details_controller.dart';
@@ -24,7 +24,7 @@ class MateShowcase extends StatelessWidget {
               tabs: [
                 Tab(text: '${AppConstants.profileTabs.elementAt(0).tr} ${_.matePosts.isNotEmpty ? '(${_.matePosts.length})':''}'),
                 Tab(text: '${AppConstants.profileTabs.elementAt(1).tr} ${_.totalPresets.isEmpty && _.totalMediaItems.length+_.totalReleaseItems.length==0
-                    ? '': '(${AppFlavour.appInUse == AppInUse.c ?
+                    ? '': '(${AppConfig.instance.appInUse == AppInUse.c ?
                 _.totalPresets.length : (_.totalMediaItems.length + _.totalReleaseItems.length)})'}'),
                 Tab(text: '${AppConstants.profileTabs.elementAt(2).tr} ${_.events.isEmpty ? '' : '(${_.events.length})'}')
               ],
@@ -36,7 +36,7 @@ class MateShowcase extends StatelessWidget {
             SizedBox(
               height: AppTheme.fullHeight(context)/2.5,
               child: TabBarView(
-                children: AppFlavour.appInUse == AppInUse.c
+                children: AppConfig.instance.appInUse == AppInUse.c
                   ? MateConstants.neomMateTabPages : MateConstants.mateTabPages,
               ),
             ),

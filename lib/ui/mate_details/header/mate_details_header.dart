@@ -3,25 +3,25 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:neom_commons/commons/app_flavour.dart';
-import 'package:neom_commons/commons/ui/theme/app_color.dart';
-import 'package:neom_commons/commons/ui/theme/app_theme.dart';
-import 'package:neom_commons/commons/ui/widgets/diagonally_cut_colored_image.dart';
-import 'package:neom_commons/commons/utils/app_alerts.dart';
-import 'package:neom_commons/commons/utils/app_utilities.dart';
-import 'package:neom_commons/commons/utils/constants/app_page_id_constants.dart';
-import 'package:neom_commons/commons/utils/constants/app_translation_constants.dart';
-import 'package:neom_core/core/app_properties.dart';
-import 'package:neom_core/core/data/implementations/report_controller.dart';
-import 'package:neom_core/core/domain/model/app_profile.dart';
-import 'package:neom_core/core/domain/model/menu_three_dots.dart';
-import 'package:neom_core/core/utils/constants/app_route_constants.dart';
-import 'package:neom_core/core/utils/core_utilities.dart';
-import 'package:neom_core/core/utils/enums/app_in_use.dart';
-import 'package:neom_core/core/utils/enums/reference_type.dart';
-import 'package:neom_core/core/utils/enums/report_type.dart';
-import 'package:neom_core/core/utils/enums/user_role.dart';
-import 'package:neom_core/core/utils/enums/verification_level.dart';
+import 'package:neom_commons/ui/theme/app_color.dart';
+import 'package:neom_commons/ui/theme/app_theme.dart';
+import 'package:neom_commons/ui/widgets/diagonally_cut_colored_image.dart';
+import 'package:neom_commons/utils/app_alerts.dart';
+import 'package:neom_commons/utils/app_utilities.dart';
+import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
+import 'package:neom_commons/utils/constants/app_translation_constants.dart';
+import 'package:neom_core/app_config.dart';
+import 'package:neom_core/app_properties.dart';
+import 'package:neom_core/data/implementations/report_controller.dart';
+import 'package:neom_core/domain/model/app_profile.dart';
+import 'package:neom_core/domain/model/menu_three_dots.dart';
+import 'package:neom_core/utils/constants/app_route_constants.dart';
+import 'package:neom_core/utils/core_utilities.dart';
+import 'package:neom_core/utils/enums/app_in_use.dart';
+import 'package:neom_core/utils/enums/reference_type.dart';
+import 'package:neom_core/utils/enums/report_type.dart';
+import 'package:neom_core/utils/enums/user_role.dart';
+import 'package:neom_core/utils/enums/verification_level.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 
 import '../mate_details_controller.dart';
@@ -90,7 +90,7 @@ class MateDetailHeader extends StatelessWidget {
                 ),
               ),
               AppTheme.heightSpace30,
-              AppFlavour.appInUse != AppInUse.e || _.mateBlogEntries.isEmpty
+              AppConfig.instance.appInUse != AppInUse.e || _.mateBlogEntries.isEmpty
                   ? const SizedBox.shrink() : TextButton(
                 style: TextButton.styleFrom(
                   foregroundColor: AppColor.white,

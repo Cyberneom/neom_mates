@@ -1,7 +1,7 @@
-import '../../../mates/ui/mate_details/footer/tabs/mate_events.dart';
-import '../../../mates/ui/mate_details/footer/tabs/mate_items.dart';
-import '../../../mates/ui/mate_details/footer/tabs/mate_posts.dart';
 import '../ui/mate_details/footer/tabs/mate_chamber_presets.dart';
+import '../ui/mate_details/footer/tabs/mate_events.dart';
+import '../ui/mate_details/footer/tabs/mate_items.dart';
+import '../ui/mate_details/footer/tabs/mate_posts.dart';
 
 class MateConstants {
 

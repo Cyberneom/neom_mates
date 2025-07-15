@@ -1,43 +1,44 @@
 import 'package:get/get.dart';
-import 'package:neom_commons/commons/app_flavour.dart';
-import 'package:neom_commons/commons/utils/app_utilities.dart';
-import 'package:neom_commons/commons/utils/constants/app_page_id_constants.dart';
-import 'package:neom_commons/commons/utils/constants/app_translation_constants.dart';
-import 'package:neom_commons/commons/utils/mappers/app_media_item_mapper.dart';
-import 'package:neom_core/core/app_config.dart';
-import 'package:neom_core/core/data/api_services/push_notification/firebase_messaging_calls.dart';
-import 'package:neom_core/core/data/firestore/activity_feed_firestore.dart';
-import 'package:neom_core/core/data/firestore/app_media_item_firestore.dart';
-import 'package:neom_core/core/data/firestore/app_release_item_firestore.dart';
-import 'package:neom_core/core/data/firestore/event_firestore.dart';
-import 'package:neom_core/core/data/firestore/frequency_firestore.dart';
-import 'package:neom_core/core/data/firestore/inbox_firestore.dart';
-import 'package:neom_core/core/data/firestore/instrument_firestore.dart';
-import 'package:neom_core/core/data/firestore/itemlist_firestore.dart';
-import 'package:neom_core/core/data/firestore/post_firestore.dart';
-import 'package:neom_core/core/data/firestore/profile_firestore.dart';
-import 'package:neom_core/core/data/firestore/user_firestore.dart';
-import 'package:neom_core/core/data/implementations/geolocator_controller.dart';
-import 'package:neom_core/core/data/implementations/user_controller.dart';
-import 'package:neom_core/core/domain/model/activity_feed.dart';
-import 'package:neom_core/core/domain/model/app_media_item.dart';
-import 'package:neom_core/core/domain/model/app_profile.dart';
-import 'package:neom_core/core/domain/model/app_release_item.dart';
-import 'package:neom_core/core/domain/model/app_user.dart';
-import 'package:neom_core/core/domain/model/event.dart';
-import 'package:neom_core/core/domain/model/inbox.dart';
-import 'package:neom_core/core/domain/model/neom/chamber_preset.dart';
-import 'package:neom_core/core/domain/model/post.dart';
-import 'package:neom_core/core/domain/use_cases/geolocator_service.dart';
-import 'package:neom_core/core/utils/constants/app_route_constants.dart';
-import 'package:neom_core/core/utils/core_utilities.dart';
-import 'package:neom_core/core/utils/enums/activity_feed_type.dart';
-import 'package:neom_core/core/utils/enums/app_in_use.dart';
-import 'package:neom_core/core/utils/enums/post_type.dart';
-import 'package:neom_core/core/utils/enums/push_notification_type.dart';
-import 'package:neom_core/core/utils/enums/user_role.dart';
-import 'package:neom_core/core/utils/enums/verification_level.dart';
-import 'package:neom_core/core/utils/position_utilities.dart';
+import 'package:neom_commons/app_flavour.dart';
+import 'package:neom_commons/utils/app_utilities.dart';
+import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
+import 'package:neom_commons/utils/constants/app_translation_constants.dart';
+import 'package:neom_commons/utils/mappers/app_media_item_mapper.dart';
+import 'package:neom_commons/utils/text_utilities.dart';
+import 'package:neom_core/app_config.dart';
+import 'package:neom_core/data/api_services/push_notification/firebase_messaging_calls.dart';
+import 'package:neom_core/data/firestore/activity_feed_firestore.dart';
+import 'package:neom_core/data/firestore/app_media_item_firestore.dart';
+import 'package:neom_core/data/firestore/app_release_item_firestore.dart';
+import 'package:neom_core/data/firestore/event_firestore.dart';
+import 'package:neom_core/data/firestore/frequency_firestore.dart';
+import 'package:neom_core/data/firestore/inbox_firestore.dart';
+import 'package:neom_core/data/firestore/instrument_firestore.dart';
+import 'package:neom_core/data/firestore/itemlist_firestore.dart';
+import 'package:neom_core/data/firestore/post_firestore.dart';
+import 'package:neom_core/data/firestore/profile_firestore.dart';
+import 'package:neom_core/data/firestore/user_firestore.dart';
+import 'package:neom_core/data/implementations/geolocator_controller.dart';
+import 'package:neom_core/data/implementations/user_controller.dart';
+import 'package:neom_core/domain/model/activity_feed.dart';
+import 'package:neom_core/domain/model/app_media_item.dart';
+import 'package:neom_core/domain/model/app_profile.dart';
+import 'package:neom_core/domain/model/app_release_item.dart';
+import 'package:neom_core/domain/model/app_user.dart';
+import 'package:neom_core/domain/model/event.dart';
+import 'package:neom_core/domain/model/inbox.dart';
+import 'package:neom_core/domain/model/neom/chamber_preset.dart';
+import 'package:neom_core/domain/model/post.dart';
+import 'package:neom_core/domain/use_cases/geolocator_service.dart';
+import 'package:neom_core/utils/constants/app_route_constants.dart';
+import 'package:neom_core/utils/core_utilities.dart';
+import 'package:neom_core/utils/enums/activity_feed_type.dart';
+import 'package:neom_core/utils/enums/app_in_use.dart';
+import 'package:neom_core/utils/enums/post_type.dart';
+import 'package:neom_core/utils/enums/push_notification_type.dart';
+import 'package:neom_core/utils/enums/user_role.dart';
+import 'package:neom_core/utils/enums/verification_level.dart';
+import 'package:neom_core/utils/position_utilities.dart';
 
 import '../../domain/use_cases/mate_details_service.dart';
 
@@ -121,7 +122,6 @@ class MateDetailsController extends GetxController implements MateDetailsService
       AppConfig.logger.e(e.toString());
     }
 
-    // update([AppPageIdConstants.mate]);
   }
 
 
@@ -185,7 +185,7 @@ class MateDetailsController extends GetxController implements MateDetailsService
         eventPosts[post] = events[post.referenceId] ?? Event();
       }
 
-      instrumentsText = AppUtilities.getInstruments(mate.value.instruments ?? {});
+      instrumentsText = TextUtilities.getInstruments(mate.value.instruments ?? {});
 
       Future.wait([
         getAddressSimple(),
@@ -199,9 +199,7 @@ class MateDetailsController extends GetxController implements MateDetailsService
 
     isLoadingDetails.value = false;
 
-    update([
-      // AppPageIdConstants.mate,
-      AppPageIdConstants.search]);
+    update([AppPageIdConstants.search]);
   }
 
 
@@ -227,7 +225,6 @@ class MateDetailsController extends GetxController implements MateDetailsService
     }
 
     isLoadingPosts.value = false;
-    // update([AppPageIdConstants.mate]);
   }
 
 
@@ -259,7 +256,7 @@ class MateDetailsController extends GetxController implements MateDetailsService
     mate.value.itemlists = await ItemlistFirestore().fetchAll(ownerId: mate.value.id);
 
     if(mate.value.itemlists?.isNotEmpty ?? false) {
-      if(AppFlavour.appInUse == AppInUse.c) {
+      if(AppConfig.instance.appInUse == AppInUse.c) {
         mate.value.frequencies = await FrequencyFirestore().retrieveFrequencies(mate.value.id);
         for (var freq in mate.value.frequencies!.values) {
           totalPresets[freq.frequency.toString()] = ChamberPreset.custom(frequency: freq);
@@ -331,8 +328,7 @@ class MateDetailsController extends GetxController implements MateDetailsService
   @override
   void getItemDetails(AppMediaItem appMediaItem) {
     AppConfig.logger.d("getItemDetails for ${appMediaItem.name}");
-    if (AppFlavour.appInUse == AppInUse.g) {
-      ///DEPRECATED Get.to(() => MediaPlayerPage(appMediaItem: appMediaItem), transition: Transition.downToUp);
+    if (AppConfig.instance.appInUse == AppInUse.g) {
       Get.toNamed(AppRouteConstants.audioPlayerMedia, arguments: [appMediaItem]);
     } else {
       Get.toNamed(AppFlavour.getMainItemDetailsRoute(), arguments: [appMediaItem]);
@@ -453,12 +449,11 @@ class MateDetailsController extends GetxController implements MateDetailsService
   }
 
   @override
-  Future<void> unblockProfile(AppProfile blockedProfile) async {
+  Future<void> unblockProfile(String profileId) async {
     AppConfig.logger.d("");
     try {
-      if (await ProfileFirestore().unblockProfile(profileId: userController.profile.id, profileToUnblock:  blockedProfile.id)) {
-        userController.profile.blockTo!.remove(blockedProfile.id);
-        blockedProfile.blockedBy!.remove(profile.id);
+      if (await ProfileFirestore().unblockProfile(profileId: userController.profile.id, profileToUnblock:  profileId)) {
+        userController.profile.blockTo!.remove(profileId);
         AppUtilities.showSnackBar(
             title: AppTranslationConstants.unblockProfile.tr,
             message: AppTranslationConstants.unblockedProfileMsg.tr
@@ -473,7 +468,6 @@ class MateDetailsController extends GetxController implements MateDetailsService
     Get.back();
     update([AppPageIdConstants.mate, AppPageIdConstants.profile]);
   }
-
 
   @override
   Future<void> sendMessage() async {
@@ -581,7 +575,5 @@ class MateDetailsController extends GetxController implements MateDetailsService
 
     update([AppPageIdConstants.mate]);
   }
-
-
 
 }

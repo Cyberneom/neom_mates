@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:neom_commons/commons/app_flavour.dart';
-import 'package:neom_commons/commons/ui/theme/app_color.dart';
-import 'package:neom_commons/commons/ui/theme/app_theme.dart';
-import 'package:neom_commons/commons/ui/widgets/genres_grid_view.dart';
-import 'package:neom_commons/commons/ui/widgets/read_more_container.dart';
-import 'package:neom_commons/commons/utils/app_utilities.dart';
-import 'package:neom_commons/commons/utils/constants/app_page_id_constants.dart';
-import 'package:neom_commons/commons/utils/constants/app_translation_constants.dart';
-import 'package:neom_core/core/utils/constants/core_constants.dart';
-import 'package:neom_core/core/utils/enums/verification_level.dart';
+import 'package:neom_commons/app_flavour.dart';
+import 'package:neom_commons/ui/theme/app_color.dart';
+import 'package:neom_commons/ui/theme/app_theme.dart';
+import 'package:neom_commons/ui/widgets/genres_grid_view.dart';
+import 'package:neom_commons/ui/widgets/read_more_container.dart';
+import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
+import 'package:neom_commons/utils/constants/app_translation_constants.dart';
+import 'package:neom_commons/utils/text_utilities.dart';
+import 'package:neom_core/utils/constants/core_constants.dart';
+import 'package:neom_core/utils/enums/verification_level.dart';
 
 import 'mate_details_controller.dart';
 
@@ -31,7 +31,7 @@ class MateDetailsBody extends StatelessWidget {
               children: [
                 SizedBox(
                   height: 30,
-                  child: Text(AppUtilities.capitalizeFirstLetter(_.mate.value.name),
+                  child: Text(TextUtilities.capitalizeFirstLetter(_.mate.value.name),
                     style: Theme.of(context).textTheme.titleLarge!.copyWith(color: Colors.white),
                   ),
                 ),
@@ -69,7 +69,7 @@ class MateDetailsBody extends StatelessWidget {
             child: ReadMoreContainer(
               text: _.mate.value.aboutMe.isEmpty
                   ? AppTranslationConstants.noProfileDesc.tr
-                  : AppUtilities.capitalizeFirstLetter(_.mate.value.aboutMe),
+                  : TextUtilities.capitalizeFirstLetter(_.mate.value.aboutMe),
               color: Colors.white70,
             )
           ),
