@@ -1,9 +1,8 @@
 import 'package:get/get.dart';
-import 'package:neom_commons/app_flavour.dart';
 import 'package:neom_commons/utils/app_utilities.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
-import 'package:neom_commons/utils/constants/app_translation_constants.dart';
-import 'package:neom_commons/utils/mappers/app_media_item_mapper.dart';
+import 'package:neom_commons/utils/constants/translations/common_translation_constants.dart';
+import 'package:neom_commons/utils/constants/translations/message_translation_constants.dart';
 import 'package:neom_commons/utils/text_utilities.dart';
 import 'package:neom_core/app_config.dart';
 import 'package:neom_core/data/api_services/push_notification/firebase_messaging_calls.dart';
@@ -11,6 +10,7 @@ import 'package:neom_core/data/firestore/activity_feed_firestore.dart';
 import 'package:neom_core/data/firestore/app_media_item_firestore.dart';
 import 'package:neom_core/data/firestore/app_release_item_firestore.dart';
 import 'package:neom_core/data/firestore/event_firestore.dart';
+import 'package:neom_core/data/firestore/external_item_firestore.dart';
 import 'package:neom_core/data/firestore/frequency_firestore.dart';
 import 'package:neom_core/data/firestore/inbox_firestore.dart';
 import 'package:neom_core/data/firestore/instrument_firestore.dart';
@@ -18,18 +18,18 @@ import 'package:neom_core/data/firestore/itemlist_firestore.dart';
 import 'package:neom_core/data/firestore/post_firestore.dart';
 import 'package:neom_core/data/firestore/profile_firestore.dart';
 import 'package:neom_core/data/firestore/user_firestore.dart';
-import 'package:neom_core/data/implementations/geolocator_controller.dart';
-import 'package:neom_core/data/implementations/user_controller.dart';
 import 'package:neom_core/domain/model/activity_feed.dart';
 import 'package:neom_core/domain/model/app_media_item.dart';
 import 'package:neom_core/domain/model/app_profile.dart';
 import 'package:neom_core/domain/model/app_release_item.dart';
 import 'package:neom_core/domain/model/app_user.dart';
 import 'package:neom_core/domain/model/event.dart';
+import 'package:neom_core/domain/model/external_item.dart';
 import 'package:neom_core/domain/model/inbox.dart';
 import 'package:neom_core/domain/model/neom/chamber_preset.dart';
 import 'package:neom_core/domain/model/post.dart';
 import 'package:neom_core/domain/use_cases/geolocator_service.dart';
+import 'package:neom_core/domain/use_cases/user_service.dart';
 import 'package:neom_core/utils/constants/app_route_constants.dart';
 import 'package:neom_core/utils/core_utilities.dart';
 import 'package:neom_core/utils/enums/activity_feed_type.dart';
@@ -41,10 +41,12 @@ import 'package:neom_core/utils/enums/verification_level.dart';
 import 'package:neom_core/utils/position_utilities.dart';
 
 import '../../domain/use_cases/mate_details_service.dart';
+import '../../utils/constants/mate_translation_constants.dart';
 
 class MateDetailsController extends GetxController implements MateDetailsService {
   
-  final userController = Get.find<UserController>();
+  final userServiceImpl = Get.find<UserService>();
+  final geoLocatorServiceImpl = Get.find<GeoLocatorService>();
 
   Map<String, AppProfile> mates = <String, AppProfile>{};
   Rx<AppProfile> mate = AppProfile().obs;
@@ -57,16 +59,14 @@ class MateDetailsController extends GetxController implements MateDetailsService
   String instrumentsText = "";
   int distance = 0;
 
-  Map<String, AppMediaItem> totalMediaItems = <String, AppMediaItem>{};
-  Map<String, AppReleaseItem> totalReleaseItems = <String, AppReleaseItem>{};
-  Map<String, AppMediaItem>  totalMixedItems = <String, AppMediaItem>{};
-  Map<String, ChamberPreset> totalPresets = <String, ChamberPreset>{};
+  RxMap<String, ChamberPreset> totalPresets = <String, ChamberPreset>{}.obs;
+  RxMap<String, dynamic>  totalMixedItems = <String, dynamic>{}.obs;
 
   RxBool following = false.obs;
   bool blockedProfile = false;
 
-  Map<Post, Event> eventPosts = <Post, Event>{};
-  Map<String, Event> events = <String, Event>{};
+  RxMap<Post, Event> eventPosts = <Post, Event>{}.obs;
+  RxMap<String, Event> events = <String, Event>{}.obs;
   
   RxBool isLoading = true.obs;
   RxBool isLoadingDetails = true.obs;
@@ -74,8 +74,7 @@ class MateDetailsController extends GetxController implements MateDetailsService
 
   RxList<Post> matePosts = <Post>[].obs;
   List<Post> mateBlogEntries = <Post>[];
-  
-  GeoLocatorService geoLocatorService = GeoLocatorController();
+
   bool debugPushNotifications = false;
 
   final Rx<VerificationLevel> verificationLevel = VerificationLevel.none.obs;
@@ -98,7 +97,7 @@ class MateDetailsController extends GetxController implements MateDetailsService
     }
 
     try {
-      profile = userController.profile;
+      profile = userServiceImpl.profile;
       blockedProfile = profile.blockTo?.contains(mateId) ?? false;
 
       if(mateId.isNotEmpty && !blockedProfile) {
@@ -142,12 +141,12 @@ class MateDetailsController extends GetxController implements MateDetailsService
   }
 
   void sendViewProfileNotification() {
-    if(mate.value.id.isNotEmpty && (userController.user.userRole == UserRole.subscriber) || debugPushNotifications) {
+    if(mate.value.id.isNotEmpty && (userServiceImpl.user.userRole == UserRole.subscriber) || debugPushNotifications) {
       FirebaseMessagingCalls.sendPrivatePushNotification(
         toProfileId: mate.value.id,
         fromProfile: profile,
         notificationType: PushNotificationType.viewProfile,
-        title: AppTranslationConstants.viewedYourProfile,
+        title: MateTranslationConstants.viewedYourProfile,
         message: '',
         referenceId: profile.id,
       );
@@ -156,7 +155,7 @@ class MateDetailsController extends GetxController implements MateDetailsService
         fromProfile: profile,
         toProfileId: mate.value.id,
         notificationType: PushNotificationType.viewProfile,
-        title: "${AppTranslationConstants.viewedProfileOf.tr} ${mate.value.name}",
+        title: "${MateTranslationConstants.viewedProfileOf.tr} ${mate.value.name}",
         referenceId: mate.value.id,
       );
     }
@@ -239,7 +238,7 @@ class MateDetailsController extends GetxController implements MateDetailsService
 
     try {
       if(mate.value.position != null && mate.value.position!.latitude != 0 && mate.value.position!.longitude != 0) {
-        address = await geoLocatorService.getAddressSimple(mate.value.position!);
+        address = await geoLocatorServiceImpl.getAddressSimple(mate.value.position!);
         distance = PositionUtilities.distanceBetweenPositionsRounded(profile.position!, mate.value.position!);
       }
     } catch (e) {
@@ -254,6 +253,9 @@ class MateDetailsController extends GetxController implements MateDetailsService
     AppConfig.logger.t("getTotalItems");
 
     mate.value.itemlists = await ItemlistFirestore().fetchAll(ownerId: mate.value.id);
+    Map<String, AppMediaItem> totalMediaItems = {};
+    Map<String, AppReleaseItem> totalReleaseItems = {};
+    Map<String, ExternalItem> totalExternalItems = {};
 
     if(mate.value.itemlists?.isNotEmpty ?? false) {
       if(AppConfig.instance.appInUse == AppInUse.c) {
@@ -265,18 +267,29 @@ class MateDetailsController extends GetxController implements MateDetailsService
       } else {
         totalMediaItems = CoreUtilities.getTotalMediaItems(mate.value.itemlists!);
         totalReleaseItems = CoreUtilities.getTotalReleaseItems(mate.value.itemlists!);
+        totalExternalItems = CoreUtilities.getTotalExternalItems(mate.value.itemlists!);
+
+        AppConfig.logger.d("${totalMixedItems.length} Total Items for Profile" );
       }
     } else if(mate.value.favoriteItems?.isNotEmpty ?? false){
       totalMediaItems = await AppMediaItemFirestore().retrieveFromList(mate.value.favoriteItems!);
       totalReleaseItems = await AppReleaseItemFirestore().retrieveFromList(mate.value.favoriteItems!);
+      totalExternalItems = await ExternalItemFirestore().retrieveFromList(mate.value.favoriteItems!);
     }
 
     for (var item in totalReleaseItems.values) {
-      totalMixedItems[item.id] = AppMediaItemMapper.fromAppReleaseItem(item);
+      totalMixedItems[item.id] = item;
     }
-    totalMixedItems.addAll(totalMediaItems);
-    AppConfig.logger.d("${totalMixedItems.length} Total Items for Profile");
 
+    for (var item in totalMediaItems.values) {
+      totalMixedItems[item.id] = item;
+    }
+
+    for (var item in totalExternalItems.values) {
+      totalMixedItems[item.id] = item;
+    }
+
+    AppConfig.logger.d("${totalMixedItems.length} Total Items for Profile");
     update([AppPageIdConstants.mate]);
   }
 
@@ -326,16 +339,6 @@ class MateDetailsController extends GetxController implements MateDetailsService
   }
 
   @override
-  void getItemDetails(AppMediaItem appMediaItem) {
-    AppConfig.logger.d("getItemDetails for ${appMediaItem.name}");
-    if (AppConfig.instance.appInUse == AppInUse.g) {
-      Get.toNamed(AppRouteConstants.audioPlayerMedia, arguments: [appMediaItem]);
-    } else {
-      Get.toNamed(AppFlavour.getMainItemDetailsRoute(), arguments: [appMediaItem]);
-    }
-  }
-
-  @override
   Future<void> follow() async {
     AppConfig.logger.t("Follow profile ${mate.value.id}");
     following.value = true;
@@ -344,12 +347,12 @@ class MateDetailsController extends GetxController implements MateDetailsService
         mate.value.followers!.add(profile.id);
 
         try {
-          if(userController.profile.following != null) {
-            if(!userController.profile.following!.contains(mate.value.id)) {
-              userController.profile.following!.add(mate.value.id);
+          if(userServiceImpl.profile.following != null) {
+            if(!userServiceImpl.profile.following!.contains(mate.value.id)) {
+              userServiceImpl.profile.following!.add(mate.value.id);
             }
           } else {
-            userController.profile.following = [mate.value.id];
+            userServiceImpl.profile.following = [mate.value.id];
           }
 
         } catch (e) {
@@ -371,7 +374,7 @@ class MateDetailsController extends GetxController implements MateDetailsService
           toProfileId: mate.value.id,
           fromProfile: profile,
           notificationType: PushNotificationType.following,
-          title: AppTranslationConstants.startedFollowingYou,
+          title: CommonTranslationConstants.startedFollowingYou,
           message: '',
           referenceId: profile.id,
         );
@@ -379,7 +382,7 @@ class MateDetailsController extends GetxController implements MateDetailsService
         FirebaseMessagingCalls.sendPublicPushNotification(
           fromProfile: profile,
           toProfileId: mate.value.id,
-          title: "${AppTranslationConstants.isFollowingTo.tr} ${mate.value.name}",
+          title: "${MateTranslationConstants.isFollowingTo.tr} ${mate.value.name}",
           notificationType: PushNotificationType.following,
           referenceId: mate.value.id,
         );
@@ -403,9 +406,9 @@ class MateDetailsController extends GetxController implements MateDetailsService
     try {
       if (await ProfileFirestore().unfollowProfile(profileId: profile.id,unfollowProfileId:  mate.value.id)) {
 
-        if(userController.profile.following != null) {
-          if(userController.profile.following!.contains(mate.value.id)) {
-            userController.profile.following!.remove(mate.value.id);
+        if(userServiceImpl.profile.following != null) {
+          if(userServiceImpl.profile.following!.contains(mate.value.id)) {
+            userServiceImpl.profile.following!.remove(mate.value.id);
           }
         }
         mate.value.followers!.remove(profile.id,);
@@ -427,15 +430,15 @@ class MateDetailsController extends GetxController implements MateDetailsService
       if (await ProfileFirestore().blockProfile(
           profileId: profile.id, profileToBlock: mate.value.id)) {
         following.value = false;
-        userController.profile.following!.remove(mate.value.id);
+        userServiceImpl.profile.following!.remove(mate.value.id);
         mate.value.followers?.remove(profile.id);
         mate.value.blockedBy?.add(profile.id);
 
-        userController.profile.blockTo!.add(mate.value.id);
+        userServiceImpl.profile.blockTo!.add(mate.value.id);
 
         AppUtilities.showSnackBar(
-            title: AppTranslationConstants.blockProfile.tr,
-            message: AppTranslationConstants.blockedProfileMsg.tr);
+            title: CommonTranslationConstants.blockProfile.tr,
+            message: MessageTranslationConstants.blockedProfileMsg.tr);
       } else {
         AppConfig.logger.i("Something happened while blocking profile");
       }
@@ -452,11 +455,11 @@ class MateDetailsController extends GetxController implements MateDetailsService
   Future<void> unblockProfile(String profileId) async {
     AppConfig.logger.d("");
     try {
-      if (await ProfileFirestore().unblockProfile(profileId: userController.profile.id, profileToUnblock:  profileId)) {
-        userController.profile.blockTo!.remove(profileId);
+      if (await ProfileFirestore().unblockProfile(profileId: userServiceImpl.profile.id, profileToUnblock:  profileId)) {
+        userServiceImpl.profile.blockTo!.remove(profileId);
         AppUtilities.showSnackBar(
-            title: AppTranslationConstants.unblockProfile.tr,
-            message: AppTranslationConstants.unblockedProfileMsg.tr
+            title: CommonTranslationConstants.unblockProfile.tr,
+            message: MateTranslationConstants.unblockedProfileMsg.tr
         );
       } else {
         AppConfig.logger.i("Somethnig happened while unblocking profile");
@@ -494,12 +497,12 @@ class MateDetailsController extends GetxController implements MateDetailsService
       if (await ProfileFirestore().remove(userId: userFromProfile.id, profileId: mate.value.id)) {
         if(following.value) {
           ProfileFirestore().unfollowProfile(profileId: profile.id, unfollowProfileId: mate.value.id);
-          userController.profile.following!.remove(mate.value.id);
+          userServiceImpl.profile.following!.remove(mate.value.id);
         }
 
         AppUtilities.showSnackBar(
-          title: AppTranslationConstants.removeProfile.tr,
-          message: AppTranslationConstants.removedProfileMsg.tr
+          title: CommonTranslationConstants.removeProfile.tr,
+          message: MateTranslationConstants.removedProfileMsg.tr
         );
       } else {
         AppConfig.logger.i("Something happened while removing profile");
@@ -551,12 +554,12 @@ class MateDetailsController extends GetxController implements MateDetailsService
         await UserFirestore().updateUserRole(mateUser.id, newUserRole.value);
         Get.back();
         AppUtilities.showSnackBar(
-            title: AppTranslationConstants.updateUserRole.tr,
-            message: AppTranslationConstants.updateUserRoleSuccess.tr);
+            title: MateTranslationConstants.updateUserRole.tr,
+            message: MateTranslationConstants.updateUserRoleSuccess.tr);
       } else {
         AppUtilities.showSnackBar(
-            title: AppTranslationConstants.updateUserRoleSame.tr,
-            message: AppTranslationConstants.updateUserRoleSame.tr);
+            title: MateTranslationConstants.updateUserRoleSame.tr,
+            message: MateTranslationConstants.updateUserRoleSame.tr);
       }
     } catch (e) {
       AppConfig.logger.e(e.toString());

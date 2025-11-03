@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:neom_commons/ui/theme/app_color.dart';
+import 'package:neom_commons/app_flavour.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_commons/ui/widgets/app_circular_progress_indicator.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
@@ -17,13 +17,13 @@ class MateDetailsPage extends StatelessWidget {
     return GetBuilder<MateDetailsController>(
       id: AppPageIdConstants.mate,
       init: MateDetailsController(),
-      builder: (_) => Scaffold(
-        backgroundColor: AppColor.main50,
+      builder: (controller) => Scaffold(
+        backgroundColor: AppFlavour.getBackgroundColor(),
         body: Container(
           height: MediaQuery.of(context).size.height,
           decoration: AppTheme.appBoxDecoration,
-          child: Obx(()=> _.isLoading.value ? const AppCircularProgressIndicator()
-              : _.blockedProfile ? const SizedBox.shrink() : SingleChildScrollView(
+          child: Obx(()=> controller.isLoading.value ? const AppCircularProgressIndicator()
+              : controller.blockedProfile ? const SizedBox.shrink() : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
@@ -32,7 +32,7 @@ class MateDetailsPage extends StatelessWidget {
                     padding: EdgeInsets.all(AppTheme.padding20),
                     child: MateDetailsBody(),
                   ),
-                  Obx(()=> _.isLoadingDetails.value ? const Center(child: LinearProgressIndicator())
+                  Obx(()=> controller.isLoadingDetails.value ? const Center(child: LinearProgressIndicator())
                       : const MateShowcase(),),
                 ],
               ),

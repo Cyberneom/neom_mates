@@ -5,9 +5,10 @@ import 'package:neom_commons/app_flavour.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_commons/ui/widgets/appbar_child.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
-import 'package:neom_commons/utils/constants/app_translation_constants.dart';
 import 'package:neom_core/data/implementations/mate_controller.dart';
 import 'package:neom_core/domain/model/app_profile.dart';
+
+import '../utils/constants/mate_translation_constants.dart';
 
 class MateListPage extends StatelessWidget {
   const MateListPage({super.key});
@@ -17,21 +18,21 @@ class MateListPage extends StatelessWidget {
     return GetBuilder<MateController>(
       id: AppPageIdConstants.mates,
       init: MateController(),
-      builder: (_) => Scaffold(
+      builder: (controller) => Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(50),
-        child: AppBarChild(title: AppTranslationConstants.itemmateSearch.tr)),
+        child: AppBarChild(title: MateTranslationConstants.itemmateSearch.tr)),
       body: Container(
         decoration: AppTheme.appBoxDecoration,
-        child: _.mates.isEmpty ?
+        child: controller.mates.isEmpty ?
           const Center(child: CircularProgressIndicator(),)
             : ListView.builder(
-          itemCount: _.mates.length,
+          itemCount: controller.mates.length,
           itemBuilder: (context, index) {
-            AppProfile mate = _.mates.values.elementAt(index);
+            AppProfile mate = controller.mates.values.elementAt(index);
             return GestureDetector(
               child: ListTile(
-                onTap: () => _.getMateDetails(mate),
+                onTap: () => controller.getMateDetails(mate),
                 leading: Hero(
                   tag: mate.photoUrl,
                   child: CircleAvatar(

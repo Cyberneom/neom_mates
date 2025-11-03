@@ -6,7 +6,8 @@ import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_commons/ui/widgets/genres_grid_view.dart';
 import 'package:neom_commons/ui/widgets/read_more_container.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
-import 'package:neom_commons/utils/constants/app_translation_constants.dart';
+import 'package:neom_commons/utils/constants/translations/app_translation_constants.dart';
+import 'package:neom_commons/utils/constants/translations/common_translation_constants.dart';
 import 'package:neom_commons/utils/text_utilities.dart';
 import 'package:neom_core/utils/constants/core_constants.dart';
 import 'package:neom_core/utils/enums/verification_level.dart';
@@ -22,7 +23,7 @@ class MateDetailsBody extends StatelessWidget {
     var textTheme = theme.textTheme;
     return GetBuilder<MateDetailsController>(
       id: AppPageIdConstants.mate,
-      builder: (_) => Obx(()=> _.isLoading.value ? const Center(child: CircularProgressIndicator())
+      builder: (controller) => Obx(()=> controller.isLoading.value ? const Center(child: CircularProgressIndicator())
       : Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -31,21 +32,21 @@ class MateDetailsBody extends StatelessWidget {
               children: [
                 SizedBox(
                   height: 30,
-                  child: Text(TextUtilities.capitalizeFirstLetter(_.mate.value.name),
+                  child: Text(TextUtilities.capitalizeFirstLetter(controller.mate.value.name),
                     style: Theme.of(context).textTheme.titleLarge!.copyWith(color: Colors.white),
                   ),
                 ),
                 AppTheme.widthSpace5,
-                if(_.mate.value.verificationLevel != VerificationLevel.none)
-                  SizedBox(height: 30, child: AppFlavour.getVerificationIcon(_.mate.value.verificationLevel, size: 18)),
+                if(controller.mate.value.verificationLevel != VerificationLevel.none)
+                  SizedBox(height: 30, child: AppFlavour.getVerificationIcon(controller.mate.value.verificationLevel, size: 18)),
               ]
           ),
-          _.mate.value.mainFeature.isNotEmpty ?
+          controller.mate.value.mainFeature.isNotEmpty ?
           Row(
             children: [
               Icon(AppFlavour.getInstrumentIcon(), size: 15.0),
               AppTheme.widthSpace5,
-              Text(_.mate.value.mainFeature.tr.capitalize,
+              Text(controller.mate.value.mainFeature.tr.capitalize,
                 style: const TextStyle(
                   fontSize: 15,
                   color: AppColor.white
@@ -53,23 +54,23 @@ class MateDetailsBody extends StatelessWidget {
               ),
             ],
           ) : const SizedBox.shrink(),
-          _.mate.value.genres != null ? GenresGridView(
-            _.mate.value.genres?.keys.toList() ?? [],
+          controller.mate.value.genres != null ? GenresGridView(
+            controller.mate.value.genres?.keys.toList() ?? [],
             AppColor.white,
             alignment: Alignment.centerLeft,
             fontSize: 15,
           ) : const SizedBox.shrink(),
           SizedBox(
-            child: _.address.isNotEmpty && _.distance > 0.0
-                ? _buildLocationInfo(_.address, _.distance, textTheme)
+            child: controller.address.isNotEmpty && controller.distance > 0.0
+                ? _buildLocationInfo(controller.address, controller.distance, textTheme)
                 : const SizedBox.shrink(),
           ),
           Padding(
             padding: const EdgeInsets.only(top: 10.0),
             child: ReadMoreContainer(
-              text: _.mate.value.aboutMe.isEmpty
-                  ? AppTranslationConstants.noProfileDesc.tr
-                  : TextUtilities.capitalizeFirstLetter(_.mate.value.aboutMe),
+              text: controller.mate.value.aboutMe.isEmpty
+                  ? CommonTranslationConstants.noProfileDesc.tr
+                  : TextUtilities.capitalizeFirstLetter(controller.mate.value.aboutMe),
               color: Colors.white70,
             )
           ),

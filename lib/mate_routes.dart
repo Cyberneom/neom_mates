@@ -4,7 +4,7 @@ import 'package:neom_core/utils/constants/app_route_constants.dart';
 import 'ui/mate_details/mate_details_page.dart';
 import 'ui/mate_list_page.dart';
 
-class MatesRoutes {
+class MateRoutes {
 
   static final List<GetPage<dynamic>> routes = [
     GetPage(

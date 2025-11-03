@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:neom_commons/ui/widgets/post_tile.dart';
 import 'package:neom_commons/utils/constants/app_assets.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
-import 'package:neom_commons/utils/constants/app_translation_constants.dart';
+import 'package:neom_commons/utils/constants/translations/common_translation_constants.dart';
 import 'package:neom_core/domain/model/event.dart';
 import 'package:neom_core/utils/enums/post_type.dart';
 
@@ -17,18 +17,17 @@ class MatePosts extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetBuilder<MateDetailsController>(
         id: AppPageIdConstants.mate,
-        /// init: MateDetailsController(),
-        builder: (_) {
-          if (_.isLoadingPosts.value) {
+        builder: (controller) {
+          if (controller.isLoadingPosts.value) {
             return const Center(child: CircularProgressIndicator());
-          } else if (_.matePosts.isEmpty) {
+          } else if (controller.matePosts.isEmpty) {
             return Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 Container(
                   padding: const EdgeInsets.only(top: 10, bottom: 10.0),
                   child: Text(
-                    AppTranslationConstants.noPostsYet.tr,
+                    CommonTranslationConstants.noPostsYet.tr,
                     style: const TextStyle(
                       fontSize: 20.0,
                       fontWeight: FontWeight.bold,
@@ -41,8 +40,8 @@ class MatePosts extends StatelessWidget {
             );
           } else {
             List<GridTile> gridTiles = [];
-            for (var post in _.matePosts) {
-              Event event = _.eventPosts[post] ?? Event();
+            for (var post in controller.matePosts) {
+              Event event = controller.eventPosts[post] ?? Event();
               if(post.type != PostType.caption) {
                 gridTiles.add(
                     GridTile(

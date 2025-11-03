@@ -5,16 +5,18 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:neom_commons/ui/theme/app_color.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
-import 'package:neom_commons/ui/widgets/diagonally_cut_colored_image.dart';
+import 'package:neom_commons/ui/widgets/images/diagonally_cut_colored_image.dart';
 import 'package:neom_commons/utils/app_alerts.dart';
 import 'package:neom_commons/utils/app_utilities.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
-import 'package:neom_commons/utils/constants/app_translation_constants.dart';
+import 'package:neom_commons/utils/constants/translations/app_translation_constants.dart';
+import 'package:neom_commons/utils/constants/translations/common_translation_constants.dart';
+import 'package:neom_commons/utils/constants/translations/message_translation_constants.dart';
 import 'package:neom_core/app_config.dart';
 import 'package:neom_core/app_properties.dart';
-import 'package:neom_core/data/implementations/report_controller.dart';
 import 'package:neom_core/domain/model/app_profile.dart';
 import 'package:neom_core/domain/model/menu_three_dots.dart';
+import 'package:neom_core/domain/use_cases/report_service.dart';
 import 'package:neom_core/utils/constants/app_route_constants.dart';
 import 'package:neom_core/utils/core_utilities.dart';
 import 'package:neom_core/utils/enums/app_in_use.dart';
@@ -24,6 +26,7 @@ import 'package:neom_core/utils/enums/user_role.dart';
 import 'package:neom_core/utils/enums/verification_level.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 
+import '../../../utils/constants/mate_translation_constants.dart';
 import '../mate_details_controller.dart';
 
 class MateDetailHeader extends StatelessWidget {
@@ -33,21 +36,21 @@ class MateDetailHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetBuilder<MateDetailsController>(
       id: AppPageIdConstants.mate,
-      builder: (_) => Stack(
+      builder: (controller) => Stack(
       children: <Widget>[
         FutureBuilder(
-          future: CoreUtilities().isAvailableMediaUrl(_.mate.value.coverImgUrl.isNotEmpty ?
-            _.mate.value.coverImgUrl : _.mate.value.photoUrl.isNotEmpty
-            ? _.mate.value.photoUrl : AppProperties.getAppLogoUrl()),
+          future: CoreUtilities().isAvailableMediaUrl(controller.mate.value.coverImgUrl.isNotEmpty ?
+            controller.mate.value.coverImgUrl : controller.mate.value.photoUrl.isNotEmpty
+            ? controller.mate.value.photoUrl : AppProperties.getAppLogoUrl()),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
                 return DiagonallyCutColoredImage(
                   Image(
                       image: NetworkImage(
                           (snapshot.data == true) ?
-                          (_.mate.value.coverImgUrl.isNotEmpty ?
-                      _.mate.value.coverImgUrl : _.mate.value.photoUrl.isNotEmpty
-                          ? _.mate.value.photoUrl : AppProperties.getAppLogoUrl()) : AppProperties.getAppLogoUrl(),),
+                          (controller.mate.value.coverImgUrl.isNotEmpty ?
+                      controller.mate.value.coverImgUrl : controller.mate.value.photoUrl.isNotEmpty
+                          ? controller.mate.value.photoUrl : AppProperties.getAppLogoUrl()) : AppProperties.getAppLogoUrl(),),
                       width: MediaQuery.of(context).size.width,
                       height: 250.0,
                       fit: BoxFit.cover,
@@ -65,18 +68,18 @@ class MateDetailHeader extends StatelessWidget {
           child: Column(
             children: <Widget>[
               Hero(
-                tag: _.mate.value.name,
+                tag: controller.mate.value.name,
                 child: FutureBuilder(
-                  future: CoreUtilities().isAvailableMediaUrl(_.mate.value.photoUrl.isNotEmpty
-                      ? _.mate.value.photoUrl : AppProperties.getAppLogoUrl(),),
+                  future: CoreUtilities().isAvailableMediaUrl(controller.mate.value.photoUrl.isNotEmpty
+                      ? controller.mate.value.photoUrl : AppProperties.getAppLogoUrl(),),
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       return CircleAvatar(
                         backgroundImage: NetworkImage((snapshot.data == true) ?
-                        (_.mate.value.photoUrl.isNotEmpty ? _.mate.value.photoUrl : AppProperties.getAppLogoUrl())
+                        (controller.mate.value.photoUrl.isNotEmpty ? controller.mate.value.photoUrl : AppProperties.getAppLogoUrl())
                             : AppProperties.getAppLogoUrl(),),
                         radius: 60.0,
-                        onBackgroundImageError: (object, error) => CachedNetworkImageProvider(_.mate.value.photoUrl.isNotEmpty ? _.mate.value.photoUrl
+                        onBackgroundImageError: (object, error) => CachedNetworkImageProvider(controller.mate.value.photoUrl.isNotEmpty ? controller.mate.value.photoUrl
                             : AppProperties.getAppLogoUrl(),),
                       );
                     } else {
@@ -90,7 +93,7 @@ class MateDetailHeader extends StatelessWidget {
                 ),
               ),
               AppTheme.heightSpace30,
-              AppConfig.instance.appInUse != AppInUse.e || _.mateBlogEntries.isEmpty
+              AppConfig.instance.appInUse != AppInUse.e || controller.mateBlogEntries.isEmpty
                   ? const SizedBox.shrink() : TextButton(
                 style: TextButton.styleFrom(
                   foregroundColor: AppColor.white,
@@ -100,7 +103,7 @@ class MateDetailHeader extends StatelessWidget {
                 child: AnimatedTextKit(
                   repeatForever: true,
                   animatedTexts: [
-                    FlickerAnimatedText(AppTranslationConstants.checkMyBlog.tr,
+                    FlickerAnimatedText(MateTranslationConstants.checkMyBlog.tr,
                         textStyle: const TextStyle(
                             fontSize: 18,
                             decoration: TextDecoration.underline
@@ -108,16 +111,16 @@ class MateDetailHeader extends StatelessWidget {
                     ),
                   ],
                   onTap: () {
-                    Get.toNamed(AppRouteConstants.mateBlog, arguments: [_.mate]);
+                    Get.toNamed(AppRouteConstants.mateBlog, arguments: [controller.mate.value]);
                   },
                 ),
-                onPressed: () => {
-
+                onPressed: () {
+                  Get.toNamed(AppRouteConstants.mateBlog, arguments: [controller.mate.value]);
                 },
               ),
               Padding(
                 padding: EdgeInsets.only(
-                  top: _.mateBlogEntries.isEmpty ? 40.0 : 20.0,
+                  top: controller.mateBlogEntries.isEmpty ? 40.0 : 20.0,
                   left: 16.0,
                   right: 16.0,
                 ),
@@ -131,10 +134,10 @@ class MateDetailHeader extends StatelessWidget {
                         child: Obx(()=> MaterialButton(
                           minWidth: 140.0,
                           color: Colors.transparent,
-                          child: Text((_.following.value ? AppTranslationConstants.unfollow
+                          child: Text((controller.following.value ? AppTranslationConstants.unfollow
                               : AppTranslationConstants.follow).tr.toUpperCase()),
                           onPressed: () {
-                            _.following.value ? _.unfollow() : _.follow();
+                            controller.following.value ? controller.unfollow() : controller.follow();
                           },
                         ),),
                       ),
@@ -148,7 +151,7 @@ class MateDetailHeader extends StatelessWidget {
                           color: Colors.transparent,
                           child: Text(AppTranslationConstants.message.tr.toUpperCase()),
                           onPressed: () {
-                            _.sendMessage();
+                            controller.sendMessage();
                           },
                         ),
                       ),
@@ -170,7 +173,7 @@ class MateDetailHeader extends StatelessWidget {
                       backgroundColor: AppTheme.canvasColor75(context),
                       context: context,
                       builder: (context) {
-                        return _buildDotsMenu(context, _.mate.value, _.userController.user.userRole);
+                        return _buildDotsMenu(context, controller.mate.value, controller.userServiceImpl.user.userRole);
                       }
                   ),
                   icon: const Icon(FontAwesomeIcons.ellipsisVertical, size: 20)
@@ -185,18 +188,18 @@ class MateDetailHeader extends StatelessWidget {
 Widget _buildDotsMenu(BuildContext context, AppProfile itemmate, UserRole userRole) {
 
   List<Menu3DotsModel> listMore = [];
-  listMore.add(Menu3DotsModel(AppTranslationConstants.reportProfile.tr, AppTranslationConstants.reportPostMsg,
-      Icons.info, AppTranslationConstants.reportProfile));
-  listMore.add(Menu3DotsModel(AppTranslationConstants.blockProfile.tr, AppTranslationConstants.blockProfileMsg,
-      Icons.block, AppTranslationConstants.blockProfile));
+  listMore.add(Menu3DotsModel(CommonTranslationConstants.reportProfile.tr, MessageTranslationConstants.reportPostMsg,
+      Icons.info, CommonTranslationConstants.reportProfile));
+  listMore.add(Menu3DotsModel(CommonTranslationConstants.blockProfile.tr, MessageTranslationConstants.blockProfileMsg,
+      Icons.block, CommonTranslationConstants.blockProfile));
   if(userRole != UserRole.subscriber) {
-    listMore.add(Menu3DotsModel(AppTranslationConstants.updateVerificationLevel.tr, AppTranslationConstants.updateVerificationLevelMsg,
-        Icons.verified, AppTranslationConstants.updateVerificationLevel));
-    listMore.add(Menu3DotsModel(AppTranslationConstants.removeProfile.tr, AppTranslationConstants.removeProfileMsg,
-        Icons.delete, AppTranslationConstants.removeProfile));
+    listMore.add(Menu3DotsModel(MateTranslationConstants.updateVerificationLevel.tr, MateTranslationConstants.updateVerificationLevelMsg,
+        Icons.verified, MateTranslationConstants.updateVerificationLevel));
+    listMore.add(Menu3DotsModel(CommonTranslationConstants.removeProfile.tr, MateTranslationConstants.removeProfileMsg,
+        Icons.delete, CommonTranslationConstants.removeProfile));
     if(userRole == UserRole.superAdmin) {
-      listMore.add(Menu3DotsModel(AppTranslationConstants.updateUserRole.tr, AppTranslationConstants.updateUserRoleMsg,
-          Icons.verified_user_rounded, AppTranslationConstants.updateUserRole));
+      listMore.add(Menu3DotsModel(MateTranslationConstants.updateUserRole.tr, MateTranslationConstants.updateUserRoleMsg,
+          Icons.verified_user_rounded, MateTranslationConstants.updateUserRole));
     }
   }
 
@@ -218,19 +221,19 @@ Widget _buildDotsMenu(BuildContext context, AppProfile itemmate, UserRole userRo
               leading: Icon(listMore[index].icons, size: 20, color: Colors.white),
               onTap: () async {
                 switch (listMore[index].action) {
-                  case AppTranslationConstants.reportProfile:
+                  case CommonTranslationConstants.reportProfile:
                     showReportProfileAlert(context, itemmate);
                     break;
-                  case AppTranslationConstants.blockProfile:
+                  case CommonTranslationConstants.blockProfile:
                     showBlockProfileAlert(context);
                     break;
-                  case AppTranslationConstants.removeProfile:
+                  case CommonTranslationConstants.removeProfile:
                     showRemoveProfileAlert(context);
                     break;
-                  case AppTranslationConstants.updateVerificationLevel:
+                  case MateTranslationConstants.updateVerificationLevel:
                     showUpdateVerificationLevelAlert(context);
                     break;
-                  case AppTranslationConstants.updateUserRole:
+                  case MateTranslationConstants.updateUserRole:
                     showUpdateUserRoleAlert(context);
                     break;
                 }
@@ -249,14 +252,14 @@ void showRemoveProfileAlert(BuildContext context) {
         backgroundColor: AppColor.main50,
         titleStyle: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      title: AppTranslationConstants.removeProfile.tr,
+      title: CommonTranslationConstants.removeProfile.tr,
       content: Column(
         children: [
-          Text(AppTranslationConstants.removeProfileMsg.tr,
+          Text(MateTranslationConstants.removeProfileMsg.tr,
             style: const TextStyle(fontSize: 15),
           ),
           AppTheme.heightSpace10,
-          Text(AppTranslationConstants.removeProfileMsg2.tr,
+          Text(MateTranslationConstants.removeProfileMsg2.tr,
             style: const TextStyle(fontSize: 15),
           ),
         ],),
@@ -291,14 +294,14 @@ void showBlockProfileAlert(BuildContext context) {
         backgroundColor: AppColor.main50,
         titleStyle: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      title: AppTranslationConstants.blockProfile.tr,
+      title: CommonTranslationConstants.blockProfile.tr,
       content: Column(
         children: [
-          Text(AppTranslationConstants.blockProfileMsg.tr,
+          Text(MessageTranslationConstants.blockProfileMsg.tr,
             style: const TextStyle(fontSize: 15),
           ),
           AppTheme.heightSpace10,
-          Text(AppTranslationConstants.blockProfileMsg2.tr,
+          Text(MessageTranslationConstants.blockProfileMsg2.tr,
             style: const TextStyle(fontSize: 15),
           ),
       ],),
@@ -326,7 +329,7 @@ void showBlockProfileAlert(BuildContext context) {
 }
 
 void showReportProfileAlert(BuildContext context, AppProfile itemmate) {
-  ReportController reportController = Get.put(ReportController());
+  ReportService reportServiceImpl = Get.find<ReportService>();
   Alert(
       context: context,
       style: AlertStyle(
@@ -337,17 +340,17 @@ void showReportProfileAlert(BuildContext context, AppProfile itemmate) {
       content: Column(
         children: <Widget>[
           Obx(()=>
-              DropdownButton<String>(
+              DropdownButton<ReportType>(
                 items: ReportType.values.map((ReportType reportType) {
-                  return DropdownMenuItem<String>(
-                    value: reportType.name,
+                  return DropdownMenuItem<ReportType>(
+                    value: reportType,
                     child: Text(reportType.name.tr),
                   );
                 }).toList(),
-                onChanged: (String? reportType) {
-                  reportController.setReportType(reportType ?? "");
+                onChanged: (ReportType? reportType) {
+                  reportServiceImpl.setReportType(reportType ?? ReportType.other);
                 },
-                value: reportController.reportType.value,
+                value: reportServiceImpl.reportType,
                 alignment: Alignment.center,
                 icon: const Icon(Icons.arrow_downward),
                 iconSize: 20,
@@ -362,7 +365,7 @@ void showReportProfileAlert(BuildContext context, AppProfile itemmate) {
           ),
           TextField(
             onChanged: (text) {
-              reportController.setMessage(text);
+              reportServiceImpl.setMessage(text);
             },
             decoration: InputDecoration(
                 labelText: AppTranslationConstants.message.tr
@@ -374,10 +377,10 @@ void showReportProfileAlert(BuildContext context, AppProfile itemmate) {
         DialogButton(
           color: AppColor.bondiBlue75,
           onPressed: () async {
-            if(!reportController.isButtonDisabled.value) {
-              await reportController.sendReport(ReferenceType.profile, itemmate.id);
+            if(!reportServiceImpl.isButtonDisabled) {
+              await reportServiceImpl.sendReport(ReferenceType.profile, itemmate.id);
               AppAlerts.showAlert(context, title: AppTranslationConstants.report.tr,
-                  message: AppTranslationConstants.hasSentReport.tr);
+                  message: CommonTranslationConstants.hasSentReport.tr);
             }
           },
           child: Text(AppTranslationConstants.send.tr,
@@ -397,11 +400,11 @@ void showUpdateVerificationLevelAlert(BuildContext context) {
         backgroundColor: AppColor.main50,
         titleStyle: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      title: AppTranslationConstants.verificationLevel.tr,
+      title: MateTranslationConstants.verificationLevel.tr,
       content: Column(
         children: <Widget>[
           AppTheme.heightSpace10,
-          Text(AppTranslationConstants.updateVerificationLevelMsg.tr,
+          Text(MateTranslationConstants.updateVerificationLevelMsg.tr,
             style: const TextStyle(fontSize: 15),
           ),
           Obx(() =>
@@ -452,8 +455,8 @@ void showUpdateVerificationLevelAlert(BuildContext context) {
               Navigator.of(context).pop();
             } else {
               AppUtilities.showSnackBar(
-                  title: AppTranslationConstants.updateVerificationLevel.tr,
-                  message: AppTranslationConstants.updateVerificationLevelSame
+                  title: MateTranslationConstants.updateVerificationLevel.tr,
+                  message: MateTranslationConstants.updateVerificationLevelSame
                       .tr);
             }
           },
@@ -477,11 +480,11 @@ void showUpdateVerificationLevelAlert(BuildContext context) {
             backgroundColor: AppColor.main50,
             titleStyle: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          title: AppTranslationConstants.updateUserRole.tr,
+          title: MateTranslationConstants.updateUserRole.tr,
           content: Column(
             children: <Widget>[
               AppTheme.heightSpace10,
-              Text(AppTranslationConstants.updateUserRoleMsg.tr,
+              Text(MateTranslationConstants.updateUserRoleMsg.tr,
                 style: const TextStyle(fontSize: 15),
               ),
               Obx(() =>

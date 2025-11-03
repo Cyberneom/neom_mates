@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:neom_commons/ui/widgets/handled_cached_network_image.dart';
+import 'package:neom_commons/ui/widgets/images/handled_cached_network_image.dart';
 import 'package:neom_commons/ui/widgets/rating_heart_bar.dart';
 import 'package:neom_commons/utils/app_utilities.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
-import 'package:neom_commons/utils/constants/app_translation_constants.dart';
+import 'package:neom_commons/utils/constants/translations/app_translation_constants.dart';
 import 'package:neom_core/domain/model/neom/chamber_preset.dart';
 import 'package:neom_core/utils/constants/app_route_constants.dart';
 
@@ -17,15 +17,14 @@ class MateChamberPresets extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetBuilder<MateDetailsController>(
       id: AppPageIdConstants.profile,
-      /// init: MateDetailsController(),
-      builder: (_) => SizedBox(
+      builder: (controller) => SizedBox(
         width: double.infinity,
         child: ListView.builder(
           padding: const EdgeInsets.fromLTRB(0.0, 8.0, 0.0, 8.0),
-          itemCount: _.totalPresets.length,
+          itemCount: controller.totalPresets.length,
           itemBuilder: (context, index) {
-            String presetKey = _.totalPresets.keys.elementAt(index);
-            ChamberPreset chamberPreset = _.totalPresets[presetKey]!;
+            String presetKey = controller.totalPresets.keys.elementAt(index);
+            ChamberPreset chamberPreset = controller.totalPresets[presetKey]!;
             return GestureDetector(
               child: ListTile(
                 contentPadding: const EdgeInsets.all(8.0),
