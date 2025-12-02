@@ -8,6 +8,7 @@ import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_commons/ui/widgets/images/diagonally_cut_colored_image.dart';
 import 'package:neom_commons/utils/app_alerts.dart';
 import 'package:neom_commons/utils/app_utilities.dart';
+import 'package:neom_commons/utils/auth_guard.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
 import 'package:neom_commons/utils/constants/translations/app_translation_constants.dart';
 import 'package:neom_commons/utils/constants/translations/common_translation_constants.dart';
@@ -137,7 +138,9 @@ class MateDetailHeader extends StatelessWidget {
                           child: Text((controller.following.value ? AppTranslationConstants.unfollow
                               : AppTranslationConstants.follow).tr.toUpperCase()),
                           onPressed: () {
-                            controller.following.value ? controller.unfollow() : controller.follow();
+                            AuthGuard.protect(context, () {
+                              controller.following.value ? controller.unfollow() : controller.follow();
+                            });
                           },
                         ),),
                       ),
@@ -151,7 +154,9 @@ class MateDetailHeader extends StatelessWidget {
                           color: Colors.transparent,
                           child: Text(AppTranslationConstants.message.tr.toUpperCase()),
                           onPressed: () {
-                            controller.sendMessage();
+                            AuthGuard.protect(context, () {
+                              controller.sendMessage();
+                            });
                           },
                         ),
                       ),
@@ -219,25 +224,26 @@ Widget _buildDotsMenu(BuildContext context, AppProfile itemmate, UserRole userRo
               title: Text(listMore[index].title.tr, style: const TextStyle(fontSize: 18)),
               subtitle: Text(listMore[index].subtitle.tr),
               leading: Icon(listMore[index].icons, size: 20, color: Colors.white),
-              onTap: () async {
-                switch (listMore[index].action) {
-                  case CommonTranslationConstants.reportProfile:
-                    showReportProfileAlert(context, itemmate);
-                    break;
-                  case CommonTranslationConstants.blockProfile:
-                    showBlockProfileAlert(context);
-                    break;
-                  case CommonTranslationConstants.removeProfile:
-                    showRemoveProfileAlert(context);
-                    break;
-                  case MateTranslationConstants.updateVerificationLevel:
-                    showUpdateVerificationLevelAlert(context);
-                    break;
-                  case MateTranslationConstants.updateUserRole:
-                    showUpdateUserRoleAlert(context);
-                    break;
-                }
-                //Get.back();
+              onTap: () {
+                AuthGuard.protect(context, () {
+                  switch (listMore[index].action) {
+                    case CommonTranslationConstants.reportProfile:
+                      showReportProfileAlert(context, itemmate);
+                      break;
+                    case CommonTranslationConstants.blockProfile:
+                      showBlockProfileAlert(context);
+                      break;
+                    case CommonTranslationConstants.removeProfile:
+                      showRemoveProfileAlert(context);
+                      break;
+                    case MateTranslationConstants.updateVerificationLevel:
+                      showUpdateVerificationLevelAlert(context);
+                      break;
+                    case MateTranslationConstants.updateUserRole:
+                      showUpdateUserRoleAlert(context);
+                      break;
+                  }
+                });
               },
             );
           })

@@ -132,7 +132,7 @@ class MateDetailsController extends GetxController implements MateDetailsService
       mate.value = await ProfileFirestore().retrieve(id);
       if(mate.value.id.isNotEmpty) {
         retrieveDetails();
-        following.value = profile.following!.contains(mate.value.id);
+        following.value = profile.following?.contains(mate.value.id) ?? false;
       }
       isLoading.value = false;
     } catch (e) {
