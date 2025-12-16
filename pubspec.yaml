@@ -1,7 +1,7 @@
 name: neom_mates
 description: Mate Profile Details for Open Neom.
-version: 1.6.0
-homepage: https://github.com/Cyberneom/neom_profile
+version: 1.6.1
+homepage: https://github.com/Cyberneom/neom_mates
 publish_to: 'none'
 
 environment:

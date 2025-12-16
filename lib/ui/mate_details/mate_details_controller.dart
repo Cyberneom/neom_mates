@@ -26,7 +26,7 @@ import 'package:neom_core/domain/model/app_user.dart';
 import 'package:neom_core/domain/model/event.dart';
 import 'package:neom_core/domain/model/external_item.dart';
 import 'package:neom_core/domain/model/inbox.dart';
-import 'package:neom_core/domain/model/neom/chamber_preset.dart';
+import 'package:neom_core/domain/model/neom/neom_chamber_preset.dart';
 import 'package:neom_core/domain/model/post.dart';
 import 'package:neom_core/domain/use_cases/geolocator_service.dart';
 import 'package:neom_core/domain/use_cases/user_service.dart';
@@ -59,7 +59,7 @@ class MateDetailsController extends GetxController implements MateDetailsService
   String instrumentsText = "";
   int distance = 0;
 
-  RxMap<String, ChamberPreset> totalPresets = <String, ChamberPreset>{}.obs;
+  RxMap<String, NeomChamberPreset> totalPresets = <String, NeomChamberPreset>{}.obs;
   RxMap<String, dynamic>  totalMixedItems = <String, dynamic>{}.obs;
 
   RxBool following = false.obs;
@@ -237,7 +237,8 @@ class MateDetailsController extends GetxController implements MateDetailsService
     AppConfig.logger.t('getAddressSimple');
 
     try {
-      if(mate.value.position != null && mate.value.position!.latitude != 0 && mate.value.position!.longitude != 0) {
+      if(profile.position != null && mate.value.position != null
+          && mate.value.position!.latitude != 0 && mate.value.position!.longitude != 0) {
         address = await geoLocatorServiceImpl.getAddressSimple(mate.value.position!);
         distance = PositionUtilities.distanceBetweenPositionsRounded(profile.position!, mate.value.position!);
       }
@@ -261,7 +262,7 @@ class MateDetailsController extends GetxController implements MateDetailsService
       if(AppConfig.instance.appInUse == AppInUse.c) {
         mate.value.frequencies = await FrequencyFirestore().retrieveFrequencies(mate.value.id);
         for (var freq in mate.value.frequencies!.values) {
-          totalPresets[freq.frequency.toString()] = ChamberPreset.custom(frequency: freq);
+          totalPresets[freq.frequency.toString()] = NeomChamberPreset.custom(frequency: freq);
         }
         totalPresets.addAll(CoreUtilities.getTotalPresets(mate.value.chambers!));
       } else {
