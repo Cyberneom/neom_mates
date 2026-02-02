@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:sint/sint.dart';
 import 'package:neom_commons/ui/widgets/images/handled_cached_network_image.dart';
 import 'package:neom_commons/ui/widgets/rating_heart_bar.dart';
 import 'package:neom_commons/utils/app_utilities.dart';
@@ -15,7 +15,7 @@ class MateChamberPresets extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<MateDetailsController>(
+    return SintBuilder<MateDetailsController>(
       id: AppPageIdConstants.profile,
       builder: (controller) => SizedBox(
         width: double.infinity,
@@ -42,7 +42,7 @@ class MateChamberPresets extends StatelessWidget {
                       : Text(AppTranslationConstants.rootFrequency.tr),
                 trailing: RatingHeartBar(state: chamberPreset.state.toDouble(),),
                 onTap: () {
-                  Get.toNamed(AppRouteConstants.generator,  arguments: [chamberPreset.clone()]);
+                  Sint.toNamed(AppRouteConstants.generator,  arguments: [chamberPreset.clone()]);
                 },
               ),
             );

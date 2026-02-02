@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:sint/sint.dart';
 import 'package:neom_commons/app_flavour.dart';
 import 'package:neom_commons/ui/widgets/event_tile.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
@@ -13,7 +13,7 @@ class MateEvents extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<MateDetailsController>(
+    return SintBuilder<MateDetailsController>(
       id: AppPageIdConstants.mate,
       builder: (controller) => controller.events.isNotEmpty ?
         ListView.builder(
@@ -23,7 +23,7 @@ class MateEvents extends StatelessWidget {
               Event event = controller.events.values.elementAt(index);
               return event.eventDate <= 0 ? const SizedBox.shrink() :
               GestureDetector(
-                onTap: () => Get.toNamed(AppRouteConstants.eventDetails, arguments: [event]),
+                onTap: () => Sint.toNamed(AppRouteConstants.eventDetails, arguments: [event]),
                 child: EventTile(event)
               );
             }

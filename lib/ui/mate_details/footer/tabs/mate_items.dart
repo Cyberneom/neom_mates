@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:sint/sint.dart';
 import 'package:neom_commons/ui/widgets/images/handled_cached_network_image.dart';
 import 'package:neom_commons/ui/widgets/rating_heart_bar.dart';
 import 'package:neom_commons/utils/app_utilities.dart';
@@ -18,7 +18,7 @@ class MateItems extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<MateDetailsController>(
+    return SintBuilder<MateDetailsController>(
       id: AppPageIdConstants.mate,
       builder: (controller) => controller.totalMixedItems.isNotEmpty ? ListView.builder(
         padding: const EdgeInsets.fromLTRB(0.0, 8.0, 0.0, 8.0),

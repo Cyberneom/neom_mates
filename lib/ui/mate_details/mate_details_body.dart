@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:sint/sint.dart';
 import 'package:neom_commons/app_flavour.dart';
 import 'package:neom_commons/ui/theme/app_color.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
@@ -21,7 +21,7 @@ class MateDetailsBody extends StatelessWidget {
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
     var textTheme = theme.textTheme;
-    return GetBuilder<MateDetailsController>(
+    return SintBuilder<MateDetailsController>(
       id: AppPageIdConstants.mate,
       builder: (controller) => Obx(()=> controller.isLoading.value ? const Center(child: CircularProgressIndicator())
       : Column(

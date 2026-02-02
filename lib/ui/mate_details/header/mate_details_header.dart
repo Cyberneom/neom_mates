@@ -2,7 +2,7 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:get/get.dart';
+import 'package:sint/sint.dart';
 import 'package:neom_commons/ui/theme/app_color.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_commons/ui/widgets/images/diagonally_cut_colored_image.dart';
@@ -35,7 +35,7 @@ class MateDetailHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<MateDetailsController>(
+    return SintBuilder<MateDetailsController>(
       id: AppPageIdConstants.mate,
       builder: (controller) => Stack(
       children: <Widget>[
@@ -112,11 +112,11 @@ class MateDetailHeader extends StatelessWidget {
                     ),
                   ],
                   onTap: () {
-                    Get.toNamed(AppRouteConstants.mateBlog, arguments: [controller.mate.value]);
+                    Sint.toNamed(AppRouteConstants.mateBlog, arguments: [controller.mate.value]);
                   },
                 ),
                 onPressed: () {
-                  Get.toNamed(AppRouteConstants.mateBlog, arguments: [controller.mate.value]);
+                  Sint.toNamed(AppRouteConstants.mateBlog, arguments: [controller.mate.value]);
                 },
               ),
               Padding(
@@ -251,7 +251,7 @@ Widget _buildDotsMenu(BuildContext context, AppProfile itemmate, UserRole userRo
 }
 
 void showRemoveProfileAlert(BuildContext context) {
-  MateDetailsController mateDetailsController = Get.put(MateDetailsController());
+  MateDetailsController mateDetailsController = Sint.put(MateDetailsController());
   Alert(
       context: context,
       style: AlertStyle(
@@ -293,7 +293,7 @@ void showRemoveProfileAlert(BuildContext context) {
 }
 
 void showBlockProfileAlert(BuildContext context) {
-  MateDetailsController mateDetailsController = Get.put(MateDetailsController());
+  MateDetailsController mateDetailsController = Sint.put(MateDetailsController());
   Alert(
       context: context,
       style: AlertStyle(
@@ -335,7 +335,7 @@ void showBlockProfileAlert(BuildContext context) {
 }
 
 void showReportProfileAlert(BuildContext context, AppProfile itemmate) {
-  ReportService reportServiceImpl = Get.find<ReportService>();
+  ReportService reportServiceImpl = Sint.find<ReportService>();
   Alert(
       context: context,
       style: AlertStyle(
@@ -398,7 +398,7 @@ void showReportProfileAlert(BuildContext context, AppProfile itemmate) {
 }
 
 void showUpdateVerificationLevelAlert(BuildContext context) {
-  MateDetailsController mateDetailsController = Get.put(
+  MateDetailsController mateDetailsController = Sint.put(
       MateDetailsController());
   Alert(
       context: context,
@@ -476,7 +476,7 @@ void showUpdateVerificationLevelAlert(BuildContext context) {
 }
 
   void showUpdateUserRoleAlert(BuildContext context) {
-    MateDetailsController mateDetailsController = Get.put(
+    MateDetailsController mateDetailsController = Sint.put(
         MateDetailsController());
 
     mateDetailsController.getUserInfo().then((value) {

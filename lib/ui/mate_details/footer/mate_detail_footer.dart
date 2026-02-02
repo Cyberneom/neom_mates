@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:sint/sint.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_commons/utils/constants/app_constants.dart';
 import 'package:neom_core/app_config.dart';
@@ -13,7 +13,7 @@ class MateShowcase extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<MateDetailsController>(
+    return SintBuilder<MateDetailsController>(
       builder: (controller) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: DefaultTabController(

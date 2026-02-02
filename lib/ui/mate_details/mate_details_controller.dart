@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+import 'package:sint/sint.dart';
 import 'package:neom_commons/utils/app_utilities.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
 import 'package:neom_commons/utils/constants/translations/common_translation_constants.dart';
@@ -43,10 +43,10 @@ import 'package:neom_core/utils/position_utilities.dart';
 import '../../domain/use_cases/mate_details_service.dart';
 import '../../utils/constants/mate_translation_constants.dart';
 
-class MateDetailsController extends GetxController implements MateDetailsService {
+class MateDetailsController extends SintController implements MateDetailsService {
   
-  final userServiceImpl = Get.find<UserService>();
-  final geoLocatorServiceImpl = Get.find<GeoLocatorService>();
+  final userServiceImpl = Sint.find<UserService>();
+  final geoLocatorServiceImpl = Sint.find<GeoLocatorService>();
 
   Map<String, AppProfile> mates = <String, AppProfile>{};
   Rx<AppProfile> mate = AppProfile().obs;
@@ -88,11 +88,11 @@ class MateDetailsController extends GetxController implements MateDetailsService
 
     String mateId = '';
 
-    if(Get.arguments != null && Get.arguments.isNotEmpty) {
-      if (Get.arguments is List) {
-        mateId = Get.arguments[0];
+    if(Sint.arguments != null && Sint.arguments.isNotEmpty) {
+      if (Sint.arguments is List) {
+        mateId = Sint.arguments[0];
       } else {
-        mateId = Get.arguments ?? "";
+        mateId = Sint.arguments ?? "";
       }
     }
 
@@ -447,8 +447,8 @@ class MateDetailsController extends GetxController implements MateDetailsService
         AppConfig.logger.e(e.toString());
     }
 
-    Get.back();
-    Get.back();
+    Sint.back();
+    Sint.back();
     update([AppPageIdConstants.mate, AppPageIdConstants.profile]);
   }
 
@@ -469,7 +469,7 @@ class MateDetailsController extends GetxController implements MateDetailsService
       AppConfig.logger.e(e.toString());
     }
 
-    Get.back();
+    Sint.back();
     update([AppPageIdConstants.mate, AppPageIdConstants.profile]);
   }
 
@@ -482,8 +482,8 @@ class MateDetailsController extends GetxController implements MateDetailsService
     try {
       inbox = await InboxFirestore().getOrCreateInboxRoom(profile, mate.value);
 
-      inbox.id.isNotEmpty ? Get.toNamed(AppRouteConstants.inboxRoom, arguments: [inbox])
-        : Get.toNamed(AppRouteConstants.home);
+      inbox.id.isNotEmpty ? Sint.toNamed(AppRouteConstants.inboxRoom, arguments: [inbox])
+        : Sint.toNamed(AppRouteConstants.home);
     } catch (e) {
       AppConfig.logger.e(e.toString());
     }
@@ -512,8 +512,8 @@ class MateDetailsController extends GetxController implements MateDetailsService
       AppConfig.logger.e(e.toString());
     }
 
-    Get.back();
-    Get.back();
+    Sint.back();
+    Sint.back();
     update([AppPageIdConstants.mate, AppPageIdConstants.profile, AppPageIdConstants.home]);
   }
 
@@ -553,7 +553,7 @@ class MateDetailsController extends GetxController implements MateDetailsService
     try {
       if(newUserRole.value != mateUser.userRole && mateUser.id.isNotEmpty) {
         await UserFirestore().updateUserRole(mateUser.id, newUserRole.value);
-        Get.back();
+        Sint.back();
         AppUtilities.showSnackBar(
             title: MateTranslationConstants.updateUserRole.tr,
             message: MateTranslationConstants.updateUserRoleSuccess.tr);
