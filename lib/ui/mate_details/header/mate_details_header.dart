@@ -1,10 +1,9 @@
-import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:sint/sint.dart';
 import 'package:neom_commons/ui/theme/app_color.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
+import 'package:neom_commons/ui/widgets/animated_follow_button.dart';
 import 'package:neom_commons/ui/widgets/images/diagonally_cut_colored_image.dart';
 import 'package:neom_commons/utils/app_alerts.dart';
 import 'package:neom_commons/utils/app_utilities.dart';
@@ -26,6 +25,7 @@ import 'package:neom_core/utils/enums/report_type.dart';
 import 'package:neom_core/utils/enums/user_role.dart';
 import 'package:neom_core/utils/enums/verification_level.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:sint/sint.dart';
 
 import '../../../utils/constants/mate_translation_constants.dart';
 import '../mate_details_controller.dart';
@@ -95,27 +95,9 @@ class MateDetailHeader extends StatelessWidget {
               ),
               AppTheme.heightSpace30,
               AppConfig.instance.appInUse != AppInUse.e || controller.mateBlogEntries.isEmpty
-                  ? const SizedBox.shrink() : TextButton(
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColor.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-                    padding: EdgeInsets.zero
-                ),
-                child: AnimatedTextKit(
-                  repeatForever: true,
-                  animatedTexts: [
-                    FlickerAnimatedText(MateTranslationConstants.checkMyBlog.tr,
-                        textStyle: const TextStyle(
-                            fontSize: 18,
-                            decoration: TextDecoration.underline
-                        )
-                    ),
-                  ],
-                  onTap: () {
-                    Sint.toNamed(AppRouteConstants.mateBlog, arguments: [controller.mate.value]);
-                  },
-                ),
-                onPressed: () {
+                  ? const SizedBox.shrink() : _AnimatedBlogButton(
+                text: MateTranslationConstants.checkMyBlog.tr,
+                onTap: () {
                   Sint.toNamed(AppRouteConstants.mateBlog, arguments: [controller.mate.value]);
                 },
               ),
@@ -128,38 +110,24 @@ class MateDetailHeader extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
-                    DecoratedBox(
-                      decoration: AppTheme.appBoxDecorationBlueGrey,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(30.0),
-                        child: Obx(()=> MaterialButton(
-                          minWidth: 140.0,
-                          color: Colors.transparent,
-                          child: Text((controller.following.value ? AppTranslationConstants.unfollow
-                              : AppTranslationConstants.follow).tr.toUpperCase()),
-                          onPressed: () {
-                            AuthGuard.protect(context, () {
-                              controller.following.value ? controller.unfollow() : controller.follow();
-                            });
-                          },
-                        ),),
-                      ),
-                    ),
-                    DecoratedBox(
-                      decoration: AppTheme.appBoxDecorationBlueGrey,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(30.0),
-                        child: MaterialButton(
-                          minWidth: 140.0,
-                          color: Colors.transparent,
-                          child: Text(AppTranslationConstants.message.tr.toUpperCase()),
-                          onPressed: () {
-                            AuthGuard.protect(context, () {
-                              controller.sendMessage();
-                            });
-                          },
-                        ),
-                      ),
+                    Obx(() => AnimatedFollowButton(
+                      isFollowing: controller.following.value,
+                      followText: AppTranslationConstants.follow.tr.toUpperCase(),
+                      followingText: AppTranslationConstants.following.tr.toUpperCase(),
+                      unfollowText: AppTranslationConstants.unfollow.tr.toUpperCase(),
+                      onPressed: () {
+                        AuthGuard.protect(context, () {
+                          controller.following.value ? controller.unfollow() : controller.follow();
+                        });
+                      },
+                    )),
+                    AnimatedMessageButton(
+                      text: AppTranslationConstants.message.tr.toUpperCase(),
+                      onPressed: () {
+                        AuthGuard.protect(context, () {
+                          controller.sendMessage();
+                        });
+                      },
                     ),
                   ],
                 ),
@@ -187,6 +155,137 @@ class MateDetailHeader extends StatelessWidget {
         ),),
       ],
     ));
+  }
+}
+
+/// Animated blog button with shimmer effect and modern styling
+class _AnimatedBlogButton extends StatefulWidget {
+  final String text;
+  final VoidCallback onTap;
+
+  const _AnimatedBlogButton({
+    required this.text,
+    required this.onTap,
+  });
+
+  @override
+  State<_AnimatedBlogButton> createState() => _AnimatedBlogButtonState();
+}
+
+class _AnimatedBlogButtonState extends State<_AnimatedBlogButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _shimmerAnimation;
+  bool _isPressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    )..repeat();
+
+    _shimmerAnimation = Tween<double>(begin: -1.0, end: 2.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _isPressed ? 0.95 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: AnimatedBuilder(
+          animation: _shimmerAnimation,
+          builder: (context, child) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(25),
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.1),
+                    Colors.white.withValues(alpha: 0.2),
+                    Colors.white.withValues(alpha: 0.3),
+                    Colors.white.withValues(alpha: 0.2),
+                    Colors.white.withValues(alpha: 0.1),
+                  ],
+                  stops: [
+                    0.0,
+                    (_shimmerAnimation.value - 0.3).clamp(0.0, 1.0),
+                    _shimmerAnimation.value.clamp(0.0, 1.0),
+                    (_shimmerAnimation.value + 0.3).clamp(0.0, 1.0),
+                    1.0,
+                  ],
+                ),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    blurRadius: 12,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.auto_stories_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    widget.text,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) {
+                      return Transform.translate(
+                        offset: Offset(
+                          2 * (0.5 - (_controller.value - 0.5).abs()),
+                          0,
+                        ),
+                        child: const Icon(
+                          Icons.chevron_right_rounded,
+                          color: Colors.white70,
+                          size: 20,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 }
 

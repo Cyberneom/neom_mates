@@ -1,48 +1,78 @@
-### 1.4.0 Major Architectural Refactor & Social Interaction Specialization
-This release for neom_mates introduces a major architectural refactor, solidifying its role as the central module for managing and displaying other user profiles (mates) and enabling social interactions within the Open Neom ecosystem. The primary focus has been on achieving greater modularity, testability, and a clear separation of concerns, in line with the overarching Clean Architecture principles.
+# Changelog
 
-Key Architectural & Feature Improvements:
+All notable changes to neom_mates will be documented in this file.
 
-Comprehensive Service Decoupling:
+## [2.0.0] - 2025-02-08
 
-Controllers within neom_mates (e.g., MateController, MateDetailsController) now exclusively interact with core functionalities through their respective service interfaces (use_cases) defined in neom_core.
+### Added
+- **ProfileCacheController** - Integration for instant profile loading
+- **Offline-first loading** - Load from cache, then fetch from network
+- **Memory leak prevention** - Proper `onClose()` cleanup for all Rx observables
+- **Network error handling** - Graceful fallback to cached data
 
-This includes services like UserService (for user profile data), GeoLocatorService (for location information), InboxService (for messaging), MateService (for mate-specific actions), ReportService (for reporting), and various Firestore repositories (ProfileFirestore, PostFirestore, EventFirestore, ItemlistFirestore, InstrumentFirestore, InboxFirestore, UserFirestore).
+### Changed
+- **SINT framework migration** - Replaced deprecated GetX API
+- **Profile loading flow** - Cache-first architecture
+- **Service decoupling** - All controllers use service interfaces
+- **UI optimizations** - Faster profile rendering
 
-This promotes the Dependency Inversion Principle (DIP), leading to significantly improved testability and flexibility by abstracting concrete implementations.
+### Fixed
+- **Memory leaks** - All Rx observables properly closed on dispose
+- **Network failures** - Continue with cached data when offline
+- **Following state** - Optimistic updates with rollback on failure
 
-Module-Specific Translations:
+### Architecture
+```
+Loading Flow:
+1. Check ProfileCacheController for cached profile
+2. Display cached data immediately (if available)
+3. Fetch fresh data from Firestore in background
+4. Update cache with fresh data
+5. Update UI if data changed
+```
 
-Introduced MateTranslationConstants to centralize and manage all UI text strings specific to mate profile and interaction functionalities. This ensures improved localization, maintainability, and consistency with Open Neom's global strategy.
+### Dependencies
+- `neom_core` - Core services and Firestore
+- `neom_commons` - Shared UI components
+- `neom_profile` - Profile cache controller
 
-Examples of new translation keys include: removeProfileMsg, removeProfileMsg2, removedProfileMsg, unblockedProfileMsg, itemmateSearch, checkMyBlog, itemmatesMsg, eventmatesMsg, viewedYourProfile, viewedProfileOf, isFollowingTo, verificationLevel, updateVerificationLevel, updateVerificationLevelMsg, updateVerificationLevelSame, updateUserRole, updateUserRoleMsg, updateUserRoleSame, updateUserRoleSuccess.
+---
 
-Centralized Mate Profile Management & Interaction:
+## [1.4.0] - Previous Release
 
-neom_mates now fully encapsulates the logic for loading, displaying, and interacting with other user profiles.
+### Added
+- MateTranslationConstants for localization
+- Admin functions (verification, role management)
+- Profile removal functionality
 
-Streamlined social features including follow/unfollow, direct messaging, and blocking/unblocking profiles.
+### Changed
+- Service decoupling via interfaces
+- Enhanced profile data aggregation
+- Location and distance calculations
 
-Introduced administrative functionalities for managing mate verification levels and user roles (for authorized users).
+### Architecture
+- Dependency Inversion Principle implementation
+- Clean Architecture adherence
+- Improved testability
 
-Enhanced Profile Data Aggregation:
+---
 
-Improved aggregation and display of diverse data points on mate profiles, including posts, items, events, and instruments, sourced from various Firestore collections.
+## [1.3.0] - Earlier Release
 
-Optimized location and distance calculations for mate profiles.
+### Added
+- Follow/unfollow functionality
+- Block/unblock profiles
+- Direct messaging integration
 
-Integration with Global Architectural Changes:
+### Changed
+- Profile tabs (posts, items, events)
+- Push notification triggers
 
-Adopts the updated service injection patterns established in neom_core's recent refactor, ensuring consistent dependency management across the ecosystem.
+---
 
-Benefits from consolidated utilities and shared UI components from neom_commons.
+## [1.2.0] - Initial Features
 
-Overall Benefits of this Major Refactor:
-
-Maximized Decoupling: neom_mates is now a highly independent module, focused purely on mate profile management and social interactions, with clear contracts for interacting with other specialized modules.
-
-Increased Testability: The extensive use of service interfaces makes the controllers and their logic much easier to unit test in isolation.
-
-Improved Maintainability & Scalability: Clearer responsibilities and reduced coupling make the module simpler to understand, debug, and extend for future social features.
-
-Enhanced User Experience: Richer profile displays and seamless social interaction features contribute to a more engaging community experience.
+### Added
+- Mate details page
+- Profile header display
+- Basic social interactions

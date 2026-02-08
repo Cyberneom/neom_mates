@@ -1,6 +1,6 @@
 name: neom_mates
 description: Mate Profile Details for Open Neom.
-version: 1.6.1
+version: 2.0.0
 homepage: https://github.com/Cyberneom/neom_mates
 publish_to: 'none'
 
@@ -18,6 +18,9 @@ dependencies:
   neom_commons:
     git:
       url: git@github.com:Cyberneom/neom_commons.git
+  neom_profile:
+    git:
+      url: git@github.com:Cyberneom/neom_profile.git
 
 dev_dependencies:
   flutter_test:

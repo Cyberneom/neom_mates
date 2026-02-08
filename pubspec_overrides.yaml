@@ -5,3 +5,5 @@ dependency_overrides:
     path: ../neom_core
   neom_commons:
     path: ../neom_commons
+  neom_profile:
+    path: ../neom_profile

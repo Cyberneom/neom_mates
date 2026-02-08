@@ -8,6 +8,7 @@ class MateTranslationConstants {
   static const String checkMyBlog = "checkMyBlog";
   static const String itemmatesMsg = 'itemmatesMsg';
   static const String eventmatesMsg = 'eventmatesMsg';
+  static const String addedAppItemToList = "addedAppItemToList";
   static const String viewedYourProfile = "viewedYourProfile";
   static const String viewedProfileOf = "viewedProfileOf";
   static const String isFollowingTo = "isFollowingTo";

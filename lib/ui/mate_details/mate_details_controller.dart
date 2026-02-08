@@ -1,4 +1,3 @@
-import 'package:sint/sint.dart';
 import 'package:neom_commons/utils/app_utilities.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
 import 'package:neom_commons/utils/constants/translations/common_translation_constants.dart';
@@ -39,14 +38,17 @@ import 'package:neom_core/utils/enums/push_notification_type.dart';
 import 'package:neom_core/utils/enums/user_role.dart';
 import 'package:neom_core/utils/enums/verification_level.dart';
 import 'package:neom_core/utils/position_utilities.dart';
+import 'package:neom_profile/neom_profile.dart';
+import 'package:sint/sint.dart';
 
 import '../../domain/use_cases/mate_details_service.dart';
 import '../../utils/constants/mate_translation_constants.dart';
 
 class MateDetailsController extends SintController implements MateDetailsService {
-  
+
   final userServiceImpl = Sint.find<UserService>();
   final geoLocatorServiceImpl = Sint.find<GeoLocatorService>();
+  final profileCacheController = ProfileCacheController();
 
   Map<String, AppProfile> mates = <String, AppProfile>{};
   Rx<AppProfile> mate = AppProfile().obs;
@@ -91,6 +93,8 @@ class MateDetailsController extends SintController implements MateDetailsService
     if(Sint.arguments != null && Sint.arguments.isNotEmpty) {
       if (Sint.arguments is List) {
         mateId = Sint.arguments[0];
+      } else if (Sint.arguments is AppProfile) {
+        mateId = (Sint.arguments as AppProfile).id;
       } else {
         mateId = Sint.arguments ?? "";
       }
@@ -120,7 +124,23 @@ class MateDetailsController extends SintController implements MateDetailsService
     } catch (e) {
       AppConfig.logger.e(e.toString());
     }
+  }
 
+  @override
+  void onClose() {
+    // FIXED: Clean up resources to prevent memory leaks
+    // Close reactive collections
+    totalPresets.close();
+    totalMixedItems.close();
+    eventPosts.close();
+    events.close();
+    matePosts.close();
+    following.close();
+    isLoading.close();
+    isLoadingDetails.close();
+    isLoadingPosts.close();
+    mate.close();
+    super.onClose();
   }
 
 
@@ -129,11 +149,34 @@ class MateDetailsController extends SintController implements MateDetailsService
     AppConfig.logger.d("loadMate $id");
 
     try {
-      mate.value = await ProfileFirestore().retrieve(id);
-      if(mate.value.id.isNotEmpty) {
-        retrieveDetails();
+      // Try to load from cache first for instant display
+      final cachedProfile = await profileCacheController.getCachedProfile(id);
+      if (cachedProfile != null) {
+        AppConfig.logger.d("Loaded profile from cache: $id");
+        mate.value = cachedProfile;
         following.value = profile.following?.contains(mate.value.id) ?? false;
+        isLoading.value = false;
+        // Continue loading fresh data in background
       }
+
+      // Fetch fresh data from network
+      try {
+        final freshProfile = await ProfileFirestore().retrieve(id);
+        if (freshProfile.id.isNotEmpty) {
+          mate.value = freshProfile;
+          // Cache the profile for offline access
+          await profileCacheController.cacheProfile(freshProfile);
+          retrieveDetails();
+          following.value = profile.following?.contains(mate.value.id) ?? false;
+        }
+      } catch (e) {
+        AppConfig.logger.w("Network error loading profile, using cache: $e");
+        // If we have cached data, continue with it
+        if (mate.value.id.isNotEmpty) {
+          retrieveDetails();
+        }
+      }
+
       isLoading.value = false;
     } catch (e) {
       AppConfig.logger.e(e.toString());
