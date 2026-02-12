@@ -94,16 +94,16 @@ class MateDetailHeader extends StatelessWidget {
                 ),
               ),
               AppTheme.heightSpace30,
-              AppConfig.instance.appInUse != AppInUse.e || controller.mateBlogEntries.isEmpty
+              Obx(() => AppConfig.instance.appInUse != AppInUse.e || !controller.hasBlogEntries.value
                   ? const SizedBox.shrink() : _AnimatedBlogButton(
                 text: MateTranslationConstants.checkMyBlog.tr,
                 onTap: () {
                   Sint.toNamed(AppRouteConstants.mateBlog, arguments: [controller.mate.value]);
                 },
-              ),
-              Padding(
+              )),
+              Obx(() => Padding(
                 padding: EdgeInsets.only(
-                  top: controller.mateBlogEntries.isEmpty ? 40.0 : 20.0,
+                  top: !controller.hasBlogEntries.value ? 40.0 : 20.0,
                   left: 16.0,
                   right: 16.0,
                 ),
@@ -131,7 +131,7 @@ class MateDetailHeader extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
+              )),
             ],
           ),
         ),

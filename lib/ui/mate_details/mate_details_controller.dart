@@ -8,6 +8,7 @@ import 'package:neom_core/data/api_services/push_notification/firebase_messaging
 import 'package:neom_core/data/firestore/activity_feed_firestore.dart';
 import 'package:neom_core/data/firestore/app_media_item_firestore.dart';
 import 'package:neom_core/data/firestore/app_release_item_firestore.dart';
+import 'package:neom_core/data/firestore/blog_entry_firestore.dart';
 import 'package:neom_core/data/firestore/event_firestore.dart';
 import 'package:neom_core/data/firestore/external_item_firestore.dart';
 import 'package:neom_core/data/firestore/frequency_firestore.dart';
@@ -75,7 +76,7 @@ class MateDetailsController extends SintController implements MateDetailsService
   RxBool isLoadingPosts = true.obs;
 
   RxList<Post> matePosts = <Post>[].obs;
-  List<Post> mateBlogEntries = <Post>[];
+  RxBool hasBlogEntries = false.obs;
 
   bool debugPushNotifications = false;
 
@@ -90,15 +91,21 @@ class MateDetailsController extends SintController implements MateDetailsService
 
     String mateId = '';
 
-    if(Sint.arguments != null && Sint.arguments.isNotEmpty) {
-      if (Sint.arguments is List) {
-        mateId = Sint.arguments[0];
-      } else if (Sint.arguments is AppProfile) {
-        mateId = (Sint.arguments as AppProfile).id;
+    if(Sint.arguments != null) {
+      final args = Sint.arguments;
+      if (args is List && args.isNotEmpty) {
+        mateId = args[0].toString();
+      } else if (args is AppProfile) {
+        mateId = args.id;
+      } else if (args is String && args.isNotEmpty) {
+        mateId = args;
       } else {
-        mateId = Sint.arguments ?? "";
+        // Fallback: try to convert to string
+        mateId = args?.toString() ?? "";
       }
     }
+
+    AppConfig.logger.d("Mate ID: $mateId (type: ${Sint.arguments?.runtimeType})");
 
     try {
       profile = userServiceImpl.profile;
@@ -211,6 +218,9 @@ class MateDetailsController extends SintController implements MateDetailsService
     try {
       verificationLevel.value = mate.value.verificationLevel;
 
+      // Always check for blog entries (independent of posts)
+      _checkMateBlogEntries();
+
       if(mate.value.posts?.isNotEmpty ?? false) {
         await getMatePosts();
       } else {
@@ -252,21 +262,42 @@ class MateDetailsController extends SintController implements MateDetailsService
     try {
       matePosts.value = await postFirestore.getProfilePosts(mate.value.id);
 
-      for (var post in matePosts) {
-        if(post.type == PostType.blogEntry && !post.isDraft) {
-          mateBlogEntries.add(post);
-        }
-      }
+      // Filter out blog entries and other non-displayable posts from matePosts
       matePosts.removeWhere((element) => element.type == PostType.blogEntry);
       matePosts.removeWhere((element) => element.type == PostType.caption);
       matePosts.removeWhere((element) => element.type == PostType.youtube);
-      AppConfig.logger.d("${mateBlogEntries.length} Total Blog Entries for Profile");
+
       AppConfig.logger.d("${matePosts.length} Total Posts for Profile");
+
+      // Check if mate has blog entries in the new BlogEntry collection
+      await _checkMateBlogEntries();
     } catch (e) {
       AppConfig.logger.e(e.toString());
     }
 
     isLoadingPosts.value = false;
+  }
+
+  /// Check if mate has blog entries in the BlogEntry collection.
+  /// Uses a simple limit(1) query to minimize Firestore reads.
+  Future<void> _checkMateBlogEntries() async {
+    try {
+      final blogFirestore = BlogEntryFirestore();
+      final mateId = mate.value.id;
+      AppConfig.logger.d("_checkMateBlogEntries: Checking for mateId=$mateId, mateName=${mate.value.name}");
+
+      if (mateId.isEmpty) {
+        AppConfig.logger.w("_checkMateBlogEntries: mateId is empty, skipping");
+        hasBlogEntries.value = false;
+        return;
+      }
+
+      hasBlogEntries.value = await blogFirestore.hasPublishedEntries(mateId);
+      AppConfig.logger.d("_checkMateBlogEntries: hasBlogEntries=${hasBlogEntries.value} for $mateId");
+    } catch (e) {
+      AppConfig.logger.e("Error checking mate blog entries: $e");
+      hasBlogEntries.value = false;
+    }
   }
 
 
