@@ -62,6 +62,9 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/share_plus-12.0.1" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/cloud_functions_web-5.1.2" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/firebase_auth_web-6.1.2" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/firebase_app_check_web-0.2.2+2" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/firebase_app_check-0.4.1+4" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/connectivity_plus-7.0.0" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
