@@ -20,5 +20,7 @@ class MateTranslationConstants {
   static const String updateUserRoleMsg = 'updateUserRoleMsg';
   static const String updateUserRoleSame = 'updateUserRoleSame';
   static const String updateUserRoleSuccess = 'updateUserRoleSuccess';
+  static const String currentlyReading = 'currentlyReading';
+  static const String readingProgress = 'readingProgress';
 
 }

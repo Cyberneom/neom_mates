@@ -9,6 +9,8 @@ class MateEnTranslations {
     MateTranslationConstants.itemmateSearch: 'Neommate Search',
     MateTranslationConstants.itemmatesMsg: 'Do you have neommates in real life? Share this place with them!',
     MateTranslationConstants.removeProfileMsg: 'Delete this profile from Cyberneom.',
+    MateTranslationConstants.removeProfileMsg2: 'Do you really want to remove this profile from the entire application?',
+    MateTranslationConstants.removedProfileMsg: 'This profile has been removed from the platform.',
     MateTranslationConstants.unblockedProfileMsg: 'This profile has been unblocked.',
     MateTranslationConstants.updateUserRole: 'Update user role',
     MateTranslationConstants.updateUserRoleMsg: 'Choose the appropriate role for the required level of privileges and access',
@@ -20,6 +22,9 @@ class MateEnTranslations {
     MateTranslationConstants.verificationLevel: 'Verification level',
     MateTranslationConstants.viewedProfileOf: 'has viewed the profile of',
     MateTranslationConstants.viewedYourProfile: 'has viewed your profile.',
+    MateTranslationConstants.checkMyBlog: '>> Visit my blog <<',
+    MateTranslationConstants.currentlyReading: 'Currently reading',
+    MateTranslationConstants.readingProgress: 'Reading progress',
   };
 
 }

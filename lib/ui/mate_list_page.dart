@@ -1,8 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:neom_commons/app_flavour.dart';
+import 'package:neom_commons/ui/widgets/custom_image.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_commons/ui/widgets/appbar_child.dart';
+import 'package:neom_commons/ui/widgets/web_content_wrapper.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
 import 'package:neom_core/data/implementations/mate_controller.dart';
 import 'package:neom_core/domain/model/app_profile.dart';
@@ -22,7 +23,10 @@ class MateListPage extends StatelessWidget {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(50),
         child: AppBarChild(title: MateTranslationConstants.itemmateSearch.tr)),
-      body: Container(
+      body: WebContentWrapper(
+        maxWidth: 750,
+        padding: EdgeInsets.zero,
+        child: Container(
         decoration: AppTheme.appBoxDecoration,
         child: controller.mates.isEmpty ?
           const Center(child: CircularProgressIndicator(),)
@@ -36,7 +40,7 @@ class MateListPage extends StatelessWidget {
                 leading: Hero(
                   tag: mate.photoUrl,
                   child: CircleAvatar(
-                    backgroundImage: CachedNetworkImageProvider(mate.photoUrl),
+                    backgroundImage: platformImageProvider(mate.photoUrl),
                   ),
                 ),
                 title: Text(mate.name),
@@ -52,7 +56,7 @@ class MateListPage extends StatelessWidget {
             );
           },
         ),
-      )
+      ),)
     ));
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:neom_commons/app_flavour.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_commons/ui/widgets/app_circular_progress_indicator.dart';
+import 'package:neom_commons/ui/widgets/web_content_wrapper.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
 import 'package:sint/sint.dart';
 import 'footer/mate_detail_footer.dart';
@@ -19,8 +20,11 @@ class MateDetailsPage extends StatelessWidget {
       init: MateDetailsController(),
       builder: (controller) => Scaffold(
         backgroundColor: AppFlavour.getBackgroundColor(),
-        body: Container(
-          height: MediaQuery.of(context).size.height,
+        body: WebContentWrapper(
+          maxWidth: 800,
+          padding: EdgeInsets.zero,
+          showBackButton: true,
+          child: Container(
           decoration: AppTheme.appBoxDecoration,
           child: Obx(()=> controller.isLoading.value ? const AppCircularProgressIndicator()
               : controller.blockedProfile ? const SizedBox.shrink() : SingleChildScrollView(
@@ -37,7 +41,7 @@ class MateDetailsPage extends StatelessWidget {
                 ],
               ),
           ),),
-        ),
+        ),),
       ),
     );
   }

@@ -23,6 +23,8 @@ class MateEsTranslations {
     MateTranslationConstants.viewedProfileOf: 'ha visto el perfil de',
     MateTranslationConstants.viewedYourProfile: 'ha visto tu perfil.',
     MateTranslationConstants.checkMyBlog: '>> Entra a mi blog <<',
+    MateTranslationConstants.currentlyReading: 'Leyendo actualmente',
+    MateTranslationConstants.readingProgress: 'Progreso de lectura',
   };
 
 }

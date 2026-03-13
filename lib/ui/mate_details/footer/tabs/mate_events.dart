@@ -23,7 +23,7 @@ class MateEvents extends StatelessWidget {
               Event event = controller.events.values.elementAt(index);
               return event.eventDate <= 0 ? const SizedBox.shrink() :
               GestureDetector(
-                onTap: () => Sint.toNamed(AppRouteConstants.eventDetails, arguments: [event]),
+                onTap: () => Sint.toNamed(AppRouteConstants.eventPath(event.id, slug: event.slug), arguments: [event]),
                 child: EventTile(event)
               );
             }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:neom_commons/utils/app_utilities.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
 import 'package:neom_commons/utils/constants/translations/common_translation_constants.dart';
@@ -6,6 +7,7 @@ import 'package:neom_commons/utils/text_utilities.dart';
 import 'package:neom_core/app_config.dart';
 import 'package:neom_core/data/api_services/push_notification/firebase_messaging_calls.dart';
 import 'package:neom_core/data/firestore/activity_feed_firestore.dart';
+import 'package:neom_core/data/firestore/nupale_session_firestore.dart';
 import 'package:neom_core/data/firestore/app_media_item_firestore.dart';
 import 'package:neom_core/data/firestore/app_release_item_firestore.dart';
 import 'package:neom_core/data/firestore/blog_entry_firestore.dart';
@@ -27,6 +29,8 @@ import 'package:neom_core/domain/model/event.dart';
 import 'package:neom_core/domain/model/external_item.dart';
 import 'package:neom_core/domain/model/inbox.dart';
 import 'package:neom_core/domain/model/neom/neom_chamber_preset.dart';
+import 'package:neom_core/domain/model/nupale/nupale_session.dart';
+import 'package:neom_core/domain/model/nupale/reading_progress.dart';
 import 'package:neom_core/domain/model/post.dart';
 import 'package:neom_core/domain/use_cases/geolocator_service.dart';
 import 'package:neom_core/domain/use_cases/user_service.dart';
@@ -48,7 +52,7 @@ import '../../utils/constants/mate_translation_constants.dart';
 class MateDetailsController extends SintController implements MateDetailsService {
 
   final userServiceImpl = Sint.find<UserService>();
-  final geoLocatorServiceImpl = Sint.find<GeoLocatorService>();
+  final GeoLocatorService? geoLocatorServiceImpl = kIsWeb ? null : Sint.find<GeoLocatorService>();
   final profileCacheController = ProfileCacheController();
 
   Map<String, AppProfile> mates = <String, AppProfile>{};
@@ -64,6 +68,7 @@ class MateDetailsController extends SintController implements MateDetailsService
 
   RxMap<String, NeomChamberPreset> totalPresets = <String, NeomChamberPreset>{}.obs;
   RxMap<String, dynamic>  totalMixedItems = <String, dynamic>{}.obs;
+  RxMap<String, ReadingProgress> readingProgressMap = <String, ReadingProgress>{}.obs;
 
   RxBool following = false.obs;
   bool blockedProfile = false;
@@ -87,9 +92,18 @@ class MateDetailsController extends SintController implements MateDetailsService
   @override
   void onInit() {
     super.onInit();
-    AppConfig.logger.t("onInit");
+
+    // Read route parameter for deep linking / web URL state
+    final routeId = Sint.routeParam;
+
+    AppConfig.logger.t("MateDetails Controller Init");
+
 
     String mateId = '';
+
+    if (routeId != null && routeId.isNotEmpty) {
+      mateId = routeId;
+    }
 
     if(Sint.arguments != null) {
       final args = Sint.arguments;
@@ -139,6 +153,7 @@ class MateDetailsController extends SintController implements MateDetailsService
     // Close reactive collections
     totalPresets.close();
     totalMixedItems.close();
+    readingProgressMap.close();
     eventPosts.close();
     events.close();
     matePosts.close();
@@ -243,6 +258,7 @@ class MateDetailsController extends SintController implements MateDetailsService
         getAddressSimple(),
         getTotalInstruments(),
         getTotalItems(),
+        getReadingProgress(),
       ]);
 
     } catch (e) {
@@ -313,7 +329,7 @@ class MateDetailsController extends SintController implements MateDetailsService
     try {
       if(profile.position != null && mate.value.position != null
           && mate.value.position!.latitude != 0 && mate.value.position!.longitude != 0) {
-        address = await geoLocatorServiceImpl.getAddressSimple(mate.value.position!);
+        address = await geoLocatorServiceImpl?.getAddressSimple(mate.value.position!) ?? '';
         distance = PositionUtilities.distanceBetweenPositionsRounded(profile.position!, mate.value.position!);
       }
     } catch (e) {
@@ -365,6 +381,41 @@ class MateDetailsController extends SintController implements MateDetailsService
     }
 
     AppConfig.logger.d("${totalMixedItems.length} Total Items for Profile");
+    update([AppPageIdConstants.mate]);
+  }
+
+  Future<void> getReadingProgress() async {
+    AppConfig.logger.d("getReadingProgress for mate ${mate.value.id}");
+
+    try {
+      if (mateUser.id.isEmpty) {
+        mateUser = await UserFirestore().getByProfileId(mate.value.id);
+      }
+
+      if (mateUser.email.isEmpty) return;
+
+      final sessions = await NupaleSessionFirestore().fetchByReaderEmail(mateUser.email);
+      if (sessions.isEmpty) return;
+
+      final Map<String, List<NupaleSession>> grouped = {};
+      for (final session in sessions.values) {
+        grouped.putIfAbsent(session.itemId, () => []).add(session);
+      }
+
+      for (final entry in grouped.entries) {
+        final progress = ReadingProgress.fromSessions(entry.key, entry.value);
+        readingProgressMap[entry.key] = progress;
+
+        if (!totalMixedItems.containsKey(entry.key)) {
+          totalMixedItems[entry.key] = progress;
+        }
+      }
+
+      AppConfig.logger.d("${readingProgressMap.length} reading progress entries found");
+    } catch (e) {
+      AppConfig.logger.e("Error getting reading progress: $e");
+    }
+
     update([AppPageIdConstants.mate]);
   }
 
@@ -454,13 +505,14 @@ class MateDetailsController extends SintController implements MateDetailsService
           referenceId: profile.id,
         );
 
-        FirebaseMessagingCalls.sendPublicPushNotification(
-          fromProfile: profile,
-          toProfileId: mate.value.id,
-          title: "${MateTranslationConstants.isFollowingTo.tr} ${mate.value.name}",
-          notificationType: PushNotificationType.following,
-          referenceId: mate.value.id,
-        );
+        ///VERIFY COSTS OF PUBLIC PUSH NOTIFICATIONS
+        // FirebaseMessagingCalls.sendPublicPushNotification(
+        //   fromProfile: profile,
+        //   toProfileId: mate.value.id,
+        //   title: "${MateTranslationConstants.isFollowingTo.tr} ${mate.value.name}",
+        //   notificationType: PushNotificationType.following,
+        //   referenceId: mate.value.id,
+        // );
 
       } else {
         following.value = false;

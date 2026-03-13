@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:neom_commons/ui/theme/app_color.dart';
@@ -80,8 +80,7 @@ class MateDetailHeader extends StatelessWidget {
                         (controller.mate.value.photoUrl.isNotEmpty ? controller.mate.value.photoUrl : AppProperties.getAppLogoUrl())
                             : AppProperties.getAppLogoUrl(),),
                         radius: 60.0,
-                        onBackgroundImageError: (object, error) => CachedNetworkImageProvider(controller.mate.value.photoUrl.isNotEmpty ? controller.mate.value.photoUrl
-                            : AppProperties.getAppLogoUrl(),),
+                        onBackgroundImageError: (object, error) {},
                       );
                     } else {
                       return const CircleAvatar(
@@ -140,7 +139,7 @@ class MateDetailHeader extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const BackButton(color: Colors.white),
+              if (!kIsWeb) const BackButton(color: Colors.white),
               IconButton(
                   onPressed: () => showModalBottomSheet(
                       backgroundColor: AppTheme.canvasColor75(context),
@@ -310,7 +309,7 @@ Widget _buildDotsMenu(BuildContext context, AppProfile itemmate, UserRole userRo
   return Container(
       height: userRole == UserRole.subscriber ? 160 : 300,
       decoration: BoxDecoration(
-        color: AppColor.main50,
+        color: AppColor.surfaceCard,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(10),
           topRight: Radius.circular(10),
@@ -354,7 +353,7 @@ void showRemoveProfileAlert(BuildContext context) {
   Alert(
       context: context,
       style: AlertStyle(
-        backgroundColor: AppColor.main50,
+        backgroundColor: AppColor.scaffold,
         titleStyle: const TextStyle(fontWeight: FontWeight.bold),
       ),
       title: CommonTranslationConstants.removeProfile.tr,
@@ -396,7 +395,7 @@ void showBlockProfileAlert(BuildContext context) {
   Alert(
       context: context,
       style: AlertStyle(
-        backgroundColor: AppColor.main50,
+        backgroundColor: AppColor.scaffold,
         titleStyle: const TextStyle(fontWeight: FontWeight.bold),
       ),
       title: CommonTranslationConstants.blockProfile.tr,
@@ -438,7 +437,7 @@ void showReportProfileAlert(BuildContext context, AppProfile itemmate) {
   Alert(
       context: context,
       style: AlertStyle(
-        backgroundColor: AppColor.main50,
+        backgroundColor: AppColor.scaffold,
         titleStyle: const TextStyle(fontWeight: FontWeight.bold),
       ),
       title: AppTranslationConstants.sendReport.tr,
@@ -461,7 +460,7 @@ void showReportProfileAlert(BuildContext context, AppProfile itemmate) {
                 iconSize: 20,
                 elevation: 16,
                 style: const TextStyle(color: Colors.white),
-                dropdownColor: AppColor.main75,
+                dropdownColor: AppColor.surfaceElevated,
                 underline: Container(
                   height: 1,
                   color: Colors.grey,
@@ -502,7 +501,7 @@ void showUpdateVerificationLevelAlert(BuildContext context) {
   Alert(
       context: context,
       style: AlertStyle(
-        backgroundColor: AppColor.main50,
+        backgroundColor: AppColor.scaffold,
         titleStyle: const TextStyle(fontWeight: FontWeight.bold),
       ),
       title: MateTranslationConstants.verificationLevel.tr,
@@ -531,7 +530,7 @@ void showUpdateVerificationLevelAlert(BuildContext context) {
                 iconSize: 20,
                 elevation: 16,
                 style: const TextStyle(color: Colors.white),
-                dropdownColor: AppColor.main75,
+                dropdownColor: AppColor.surfaceElevated,
                 underline: Container(
                   height: 1,
                   color: Colors.grey,
@@ -582,7 +581,7 @@ void showUpdateVerificationLevelAlert(BuildContext context) {
       Alert(
           context: context,
           style: AlertStyle(
-            backgroundColor: AppColor.main50,
+            backgroundColor: AppColor.scaffold,
             titleStyle: const TextStyle(fontWeight: FontWeight.bold),
           ),
           title: MateTranslationConstants.updateUserRole.tr,
@@ -610,7 +609,7 @@ void showUpdateVerificationLevelAlert(BuildContext context) {
                     iconSize: 20,
                     elevation: 16,
                     style: const TextStyle(color: Colors.white),
-                    dropdownColor: AppColor.main75,
+                    dropdownColor: AppColor.surfaceElevated,
                     underline: Container(
                       height: 1,
                       color: Colors.grey,

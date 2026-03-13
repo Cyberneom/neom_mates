@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:neom_commons/ui/widgets/images/handled_cached_network_image.dart';
 import 'package:neom_commons/ui/widgets/rating_heart_bar.dart';
+import 'package:neom_commons/ui/widgets/reading_progress_indicator.dart';
 import 'package:neom_commons/utils/app_utilities.dart';
 import 'package:neom_commons/utils/constants/app_assets.dart';
 import 'package:neom_commons/utils/constants/app_constants.dart';
@@ -8,6 +9,7 @@ import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
 import 'package:neom_commons/utils/constants/translations/common_translation_constants.dart';
 import 'package:neom_commons/utils/mappers/base_item_mapper.dart';
 import 'package:neom_core/domain/model/base_item.dart';
+import 'package:neom_core/domain/model/nupale/reading_progress.dart';
 import 'package:sint/sint.dart';
 
 import '../../mate_details_controller.dart';
@@ -25,7 +27,23 @@ class MateItems extends StatelessWidget {
         itemCount: controller.totalMixedItems.length,
         itemBuilder: (context, index) {
           dynamic item = controller.totalMixedItems.values.elementAt(index);
+
+          if (item is ReadingProgress) {
+            return ListTile(
+              contentPadding: const EdgeInsets.all(8.0),
+              leading: const SizedBox(
+                width: 50, height: 50,
+                child: Icon(Icons.menu_book, color: Colors.white54, size: 32),
+              ),
+              title: Text(item.itemName.length > AppConstants.maxAppItemNameLength
+                  ? "${item.itemName.substring(0, AppConstants.maxAppItemNameLength)}..."
+                  : item.itemName),
+              subtitle: ReadingProgressIndicator(progress: item),
+            );
+          }
+
           BaseItem baseItem = BaseItemMapper.fromDynamicItem(item);
+          final ReadingProgress? progress = controller.readingProgressMap[baseItem.id];
 
           return ListTile(
             contentPadding: const EdgeInsets.all(8.0),
@@ -33,15 +51,21 @@ class MateItems extends StatelessWidget {
             width: 50, enableFullScreen: false,),
             title: Text(baseItem.name.isEmpty ? ""
               : baseItem.name.length > AppConstants.maxAppItemNameLength ? "${baseItem.name.substring(0,AppConstants.maxAppItemNameLength)}...": baseItem.name),
-            subtitle: Row(
-            children: [
-              Text(baseItem.ownerName.isEmpty ? ""
-                  : baseItem.ownerName.length > AppConstants.maxArtistNameLength
-              ? "${baseItem.ownerName.substring(0,AppConstants.maxArtistNameLength)}..."
-                  : baseItem.ownerName),
-              const SizedBox(width:5,),
-              RatingHeartBar(state: baseItem.state.toDouble()),]),
-                onTap: () => AppUtilities.gotoItemDetails(item),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  Text(baseItem.ownerName.isEmpty ? ""
+                      : baseItem.ownerName.length > AppConstants.maxArtistNameLength
+                  ? "${baseItem.ownerName.substring(0,AppConstants.maxArtistNameLength)}..."
+                      : baseItem.ownerName),
+                  const SizedBox(width:5,),
+                  RatingHeartBar(state: baseItem.state.toDouble()),
+                ]),
+                if (progress != null) ReadingProgressIndicator(progress: progress),
+              ],
+            ),
+            onTap: () => AppUtilities.gotoItemDetails(item),
           );
         },
       ) : Column(
