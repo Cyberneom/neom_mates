@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:neom_commons/ui/theme/app_color.dart';
+import 'package:neom_commons/ui/widgets/custom_image.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_commons/ui/widgets/animated_follow_button.dart';
 import 'package:neom_commons/ui/widgets/images/diagonally_cut_colored_image.dart';
@@ -47,7 +48,7 @@ class MateDetailHeader extends StatelessWidget {
             if (snapshot.hasData) {
                 return DiagonallyCutColoredImage(
                   Image(
-                      image: NetworkImage(
+                      image: platformImageProvider(
                           (snapshot.data == true) ?
                           (controller.mate.value.coverImgUrl.isNotEmpty ?
                       controller.mate.value.coverImgUrl : controller.mate.value.photoUrl.isNotEmpty
@@ -74,10 +75,17 @@ class MateDetailHeader extends StatelessWidget {
                   future: CoreUtilities().isAvailableMediaUrl(controller.mate.value.photoUrl.isNotEmpty
                       ? controller.mate.value.photoUrl : AppProperties.getAppLogoUrl(),),
                   builder: (context, snapshot) {
+                    final photoUrl = controller.mate.value.photoUrl;
+                    if (kIsWeb) {
+                      return platformCircleAvatar(
+                        imageUrl: photoUrl.isNotEmpty ? photoUrl : AppProperties.getAppLogoUrl(),
+                        radius: 60,
+                      );
+                    }
                     if (snapshot.hasData) {
                       return CircleAvatar(
-                        backgroundImage: NetworkImage((snapshot.data == true) ?
-                        (controller.mate.value.photoUrl.isNotEmpty ? controller.mate.value.photoUrl : AppProperties.getAppLogoUrl())
+                        backgroundImage: platformImageProvider((snapshot.data == true) ?
+                        (photoUrl.isNotEmpty ? photoUrl : AppProperties.getAppLogoUrl())
                             : AppProperties.getAppLogoUrl(),),
                         radius: 60.0,
                         onBackgroundImageError: (object, error) {},
@@ -87,7 +95,6 @@ class MateDetailHeader extends StatelessWidget {
                         radius: 60.0,
                         child: Center(child: CircularProgressIndicator()),
                       );
-
                     }
                   },
                 ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:neom_commons/app_flavour.dart';
 import 'package:neom_commons/ui/widgets/custom_image.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
-import 'package:neom_commons/ui/widgets/appbar_child.dart';
+
 import 'package:neom_commons/ui/widgets/web_content_wrapper.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
 import 'package:neom_core/data/implementations/mate_controller.dart';
@@ -22,7 +22,7 @@ class MateListPage extends StatelessWidget {
       builder: (controller) => Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(50),
-        child: AppBarChild(title: MateTranslationConstants.itemmateSearch.tr)),
+        child: SintAppBar(title: MateTranslationConstants.itemmateSearch.tr)),
       body: WebContentWrapper(
         maxWidth: 750,
         padding: EdgeInsets.zero,
@@ -39,8 +39,8 @@ class MateListPage extends StatelessWidget {
                 onTap: () => controller.getMateDetails(mate),
                 leading: Hero(
                   tag: mate.photoUrl,
-                  child: CircleAvatar(
-                    backgroundImage: platformImageProvider(mate.photoUrl),
+                  child: platformCircleAvatar(
+                    imageUrl: mate.photoUrl,
                   ),
                 ),
                 title: Text(mate.name),

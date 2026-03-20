@@ -5,6 +5,7 @@ import 'package:neom_commons/utils/constants/translations/common_translation_con
 import 'package:neom_commons/utils/constants/translations/message_translation_constants.dart';
 import 'package:neom_commons/utils/text_utilities.dart';
 import 'package:neom_core/app_config.dart';
+import 'package:neom_core/utils/neom_error_logger.dart';
 import 'package:neom_core/data/api_services/push_notification/firebase_messaging_calls.dart';
 import 'package:neom_core/data/firestore/activity_feed_firestore.dart';
 import 'package:neom_core/data/firestore/nupale_session_firestore.dart';
@@ -130,8 +131,8 @@ class MateDetailsController extends SintController implements MateDetailsService
       } else {
         AppConfig.logger.i("Profile $mateId is blocked");
       }
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'onInit');
     }
   }
 
@@ -142,8 +143,8 @@ class MateDetailsController extends SintController implements MateDetailsService
     AppConfig.logger.d("MateDetails Controller Ready");
     try {
       sendViewProfileNotification();
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'onReady');
     }
   }
 
@@ -191,8 +192,8 @@ class MateDetailsController extends SintController implements MateDetailsService
           retrieveDetails();
           following.value = profile.following?.contains(mate.value.id) ?? false;
         }
-      } catch (e) {
-        AppConfig.logger.w("Network error loading profile, using cache: $e");
+      } catch (e, st) {
+        NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'loadMate.network');
         // If we have cached data, continue with it
         if (mate.value.id.isNotEmpty) {
           retrieveDetails();
@@ -200,8 +201,8 @@ class MateDetailsController extends SintController implements MateDetailsService
       }
 
       isLoading.value = false;
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'loadMate');
     }
   }
 
@@ -261,8 +262,8 @@ class MateDetailsController extends SintController implements MateDetailsService
         getReadingProgress(),
       ]);
 
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'retrieveDetails');
     }
 
     isLoadingDetails.value = false;
@@ -287,8 +288,8 @@ class MateDetailsController extends SintController implements MateDetailsService
 
       // Check if mate has blog entries in the new BlogEntry collection
       await _checkMateBlogEntries();
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'getMatePosts');
     }
 
     isLoadingPosts.value = false;
@@ -310,8 +311,8 @@ class MateDetailsController extends SintController implements MateDetailsService
 
       hasBlogEntries.value = await blogFirestore.hasPublishedEntries(mateId);
       AppConfig.logger.d("_checkMateBlogEntries: hasBlogEntries=${hasBlogEntries.value} for $mateId");
-    } catch (e) {
-      AppConfig.logger.e("Error checking mate blog entries: $e");
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: '_checkMateBlogEntries');
       hasBlogEntries.value = false;
     }
   }
@@ -332,8 +333,8 @@ class MateDetailsController extends SintController implements MateDetailsService
         address = await geoLocatorServiceImpl?.getAddressSimple(mate.value.position!) ?? '';
         distance = PositionUtilities.distanceBetweenPositionsRounded(profile.position!, mate.value.position!);
       }
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'getAddressSimple');
     }
 
     AppConfig.logger.d("$address and $distance km");
@@ -412,8 +413,8 @@ class MateDetailsController extends SintController implements MateDetailsService
       }
 
       AppConfig.logger.d("${readingProgressMap.length} reading progress entries found");
-    } catch (e) {
-      AppConfig.logger.e("Error getting reading progress: $e");
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'getReadingProgress');
     }
 
     update([AppPageIdConstants.mate]);
@@ -441,8 +442,8 @@ class MateDetailsController extends SintController implements MateDetailsService
         events.addAll(goingEvents);
       }
 
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'getTotalEvents');
     }
 
     AppConfig.logger.d("${events.length} Total Events for Itemmate");
@@ -457,8 +458,8 @@ class MateDetailsController extends SintController implements MateDetailsService
     try {
       mate.value.instruments = await InstrumentFirestore().retrieveInstruments(mate.value.id);
       AppConfig.logger.t("${mate.value.instruments?.length ?? 0} Total Instruments for Profile");
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'getTotalInstruments');
     }
 
     update([AppPageIdConstants.mate]);
@@ -481,8 +482,8 @@ class MateDetailsController extends SintController implements MateDetailsService
             userServiceImpl.profile.following = [mate.value.id];
           }
 
-        } catch (e) {
-          AppConfig.logger.e(e.toString());
+        } catch (e, st) {
+          NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'follow.updateFollowing');
         }
 
         ActivityFeed activityFeed = ActivityFeed();
@@ -518,8 +519,8 @@ class MateDetailsController extends SintController implements MateDetailsService
         following.value = false;
       }
 
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'follow');
     }
 
     update([AppPageIdConstants.mate]);
@@ -542,8 +543,8 @@ class MateDetailsController extends SintController implements MateDetailsService
       } else {
         following.value = true;
       }
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'unfollow');
     }
 
     update([AppPageIdConstants.mate, AppPageIdConstants.profile]);
@@ -569,8 +570,8 @@ class MateDetailsController extends SintController implements MateDetailsService
       } else {
         AppConfig.logger.i("Something happened while blocking profile");
       }
-    } catch (e) {
-        AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'blockProfile');
     }
 
     Sint.back();
@@ -591,8 +592,8 @@ class MateDetailsController extends SintController implements MateDetailsService
       } else {
         AppConfig.logger.i("Somethnig happened while unblocking profile");
       }
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'unblockProfile');
     }
 
     Sint.back();
@@ -610,8 +611,8 @@ class MateDetailsController extends SintController implements MateDetailsService
 
       inbox.id.isNotEmpty ? Sint.toNamed(AppRouteConstants.inboxRoom, arguments: [inbox])
         : Sint.toNamed(AppRouteConstants.home);
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'sendMessage');
     }
   }
 
@@ -634,8 +635,8 @@ class MateDetailsController extends SintController implements MateDetailsService
       } else {
         AppConfig.logger.i("Something happened while removing profile");
       }
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'removeProfile');
     }
 
     Sint.back();
@@ -647,8 +648,8 @@ class MateDetailsController extends SintController implements MateDetailsService
   void selectVerificationLevel(VerificationLevel level) {
     try {
       verificationLevel.value = level;
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'selectVerificationLevel');
     }
   }
 
@@ -658,8 +659,8 @@ class MateDetailsController extends SintController implements MateDetailsService
       if(await ProfileFirestore().updateVerificationLevel(mate.value.id, verificationLevel.value)) {
         mate.value.verificationLevel = verificationLevel.value;
       }
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'updateVerificationLevel');
     }
 
     update([AppPageIdConstants.mate]);
@@ -669,8 +670,8 @@ class MateDetailsController extends SintController implements MateDetailsService
   void selectUserRole(UserRole role) {
     try {
       newUserRole.value = role;
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'selectUserRole');
     }
   }
 
@@ -688,8 +689,8 @@ class MateDetailsController extends SintController implements MateDetailsService
             title: MateTranslationConstants.updateUserRoleSame.tr,
             message: MateTranslationConstants.updateUserRoleSame.tr);
       }
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'updateUserRole');
     }
 
   }
@@ -699,8 +700,8 @@ class MateDetailsController extends SintController implements MateDetailsService
     try {
       mateUser = await UserFirestore().getByProfileId(mate.value.id);
       newUserRole.value = mateUser.userRole;
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'getUserInfo');
     }
 
     update([AppPageIdConstants.mate]);
