@@ -412,6 +412,42 @@ class MateDetailsController extends SintController implements MateDetailsService
         }
       }
 
+      // Enrich standalone ReadingProgress items with cover/author from item data
+      final standaloneIds = readingProgressMap.keys
+          .where((id) => totalMixedItems[id] is ReadingProgress)
+          .toList();
+
+      if (standaloneIds.isNotEmpty) {
+        final releaseItems = await AppReleaseItemFirestore().retrieveFromList(standaloneIds);
+        final mediaItems = await AppMediaItemFirestore().retrieveFromList(standaloneIds);
+        final externalItems = await ExternalItemFirestore().retrieveFromList(standaloneIds);
+
+        for (final id in standaloneIds) {
+          String imgUrl = '';
+          String ownerName = '';
+
+          if (releaseItems.containsKey(id)) {
+            imgUrl = releaseItems[id]!.imgUrl;
+            ownerName = releaseItems[id]!.ownerName;
+          } else if (mediaItems.containsKey(id)) {
+            imgUrl = mediaItems[id]!.imgUrl;
+            ownerName = mediaItems[id]!.ownerName;
+          } else if (externalItems.containsKey(id)) {
+            imgUrl = externalItems[id]!.imgUrl;
+            ownerName = externalItems[id]!.ownerName;
+          }
+
+          if (imgUrl.isNotEmpty || ownerName.isNotEmpty) {
+            final enriched = readingProgressMap[id]!.copyWith(
+              itemImgUrl: imgUrl,
+              itemOwnerName: ownerName,
+            );
+            readingProgressMap[id] = enriched;
+            totalMixedItems[id] = enriched;
+          }
+        }
+      }
+
       AppConfig.logger.d("${readingProgressMap.length} reading progress entries found");
     } catch (e, st) {
       NeomErrorLogger.recordError(e, st, module: 'neom_mates', operation: 'getReadingProgress');

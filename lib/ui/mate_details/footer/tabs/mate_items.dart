@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:neom_commons/ui/widgets/images/handled_cached_network_image.dart';
 import 'package:neom_commons/ui/widgets/rating_heart_bar.dart';
@@ -31,14 +32,32 @@ class MateItems extends StatelessWidget {
           if (item is ReadingProgress) {
             return ListTile(
               contentPadding: const EdgeInsets.all(8.0),
-              leading: const SizedBox(
-                width: 50, height: 50,
-                child: Icon(Icons.menu_book, color: Colors.white54, size: 32),
+              leading: SizedBox(
+                width: 50, height: 65,
+                child: item.itemImgUrl.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: HandledCachedNetworkImage(item.itemImgUrl,
+                          width: 50, height: 65, enableFullScreen: false,),
+                      )
+                    : const Icon(Icons.menu_book, color: Colors.white54, size: 32),
               ),
-              title: Text(item.itemName.length > AppConstants.maxAppItemNameLength
-                  ? "${item.itemName.substring(0, AppConstants.maxAppItemNameLength)}..."
-                  : item.itemName),
-              subtitle: ReadingProgressIndicator(progress: item),
+              title: Text(
+                item.itemName,
+                maxLines: kIsWeb ? 2 : 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (item.itemOwnerName.isNotEmpty)
+                    Text(item.itemOwnerName,
+                      style: const TextStyle(fontSize: 12, color: Colors.white60),
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                    ),
+                  ReadingProgressIndicator(progress: item),
+                ],
+              ),
             );
           }
 
@@ -49,17 +68,21 @@ class MateItems extends StatelessWidget {
             contentPadding: const EdgeInsets.all(8.0),
             leading: HandledCachedNetworkImage(baseItem.imgUrl,
             width: 50, enableFullScreen: false,),
-            title: Text(baseItem.name.isEmpty ? ""
-              : baseItem.name.length > AppConstants.maxAppItemNameLength ? "${baseItem.name.substring(0,AppConstants.maxAppItemNameLength)}...": baseItem.name),
+            title: Text(
+              baseItem.name,
+              maxLines: kIsWeb ? 2 : 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(children: [
-                  Text(baseItem.ownerName.isEmpty ? ""
-                      : baseItem.ownerName.length > AppConstants.maxArtistNameLength
-                  ? "${baseItem.ownerName.substring(0,AppConstants.maxArtistNameLength)}..."
-                      : baseItem.ownerName),
-                  const SizedBox(width:5,),
+                  Flexible(
+                    child: Text(baseItem.ownerName,
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
                   RatingHeartBar(state: baseItem.state.toDouble()),
                 ]),
                 if (progress != null) ReadingProgressIndicator(progress: progress),

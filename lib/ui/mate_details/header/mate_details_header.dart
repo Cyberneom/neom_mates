@@ -378,7 +378,7 @@ void showRemoveProfileAlert(BuildContext context) {
         DialogButton(
           color: AppColor.bondiBlue75,
           onPressed: () async {
-            Navigator.of(context).pop();
+            Sint.back();
           },
           child: Text(AppTranslationConstants.goBack.tr,
             style: const TextStyle(fontSize: 15),
@@ -420,7 +420,7 @@ void showBlockProfileAlert(BuildContext context) {
         DialogButton(
           color: AppColor.bondiBlue75,
           onPressed: () async {
-            Navigator.of(context).pop();
+            Sint.back();
           },
           child: Text(AppTranslationConstants.goBack.tr,
             style: const TextStyle(fontSize: 15),
@@ -550,7 +550,7 @@ void showUpdateVerificationLevelAlert(BuildContext context) {
         DialogButton(
           color: AppColor.bondiBlue75,
           onPressed: () {
-            Navigator.of(context).pop();
+            Sint.back();
           },
           child: Text(AppTranslationConstants.goBack.tr,
             style: const TextStyle(fontSize: 15),
@@ -562,8 +562,8 @@ void showUpdateVerificationLevelAlert(BuildContext context) {
             if (mateDetailsController.verificationLevel.value !=
                 mateDetailsController.mate.value.verificationLevel) {
               await mateDetailsController.updateVerificationLevel();
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
+              Sint.back();
+              Sint.back();
             } else {
               AppUtilities.showSnackBar(
                   title: MateTranslationConstants.updateVerificationLevel.tr,
@@ -629,7 +629,7 @@ void showUpdateVerificationLevelAlert(BuildContext context) {
             DialogButton(
               color: AppColor.bondiBlue75,
               onPressed: () {
-                Navigator.of(context).pop();
+                Sint.back();
               },
               child: Text(AppTranslationConstants.goBack.tr,
                 style: const TextStyle(fontSize: 15),
