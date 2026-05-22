@@ -320,7 +320,7 @@ void main() {
                 children: [
                   _buildStatColumn('Posts', 42),
                   _buildStatColumn('Events', 15),
-                  _buildStatColumn('Bands', 3),
+                  _buildStatColumn('Collectives', 3),
                 ],
               ),
             ),
@@ -371,7 +371,7 @@ void main() {
                 children: [
                   _buildStatColumn('Posts', 42),
                   _buildStatColumn('Events', 15),
-                  _buildStatColumn('Bands', 3),
+                  _buildStatColumn('Collectives', 3),
                 ],
               ),
             ),

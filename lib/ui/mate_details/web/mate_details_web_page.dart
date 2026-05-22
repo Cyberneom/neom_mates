@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:neom_commons/app_flavour.dart';
+import 'package:neom_commons/ui/theme/app_color.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_commons/ui/widgets/web/web_breadcrumb.dart';
 import 'package:neom_commons/ui/widgets/web/web_keyboard_manager.dart';
@@ -11,8 +12,13 @@ import 'package:sint/sint.dart';
 
 import '../mate_details_controller.dart';
 import 'widgets/mate_details_web_activity.dart';
-import 'widgets/mate_details_web_card.dart';
+import 'widgets/mate_details_web_header.dart';
 
+/// Instagram-style profile page for web.
+/// - Top: horizontal header (avatar + name/stats/bio + action buttons + 3-dots)
+/// - Bottom: full-width tabbed activity (posts grid, items, events)
+/// Centered in a max-width container so the layout doesn't sprawl on
+/// large monitors.
 class MateDetailsWebPage extends StatelessWidget {
   final MateDetailsController controller;
 
@@ -59,17 +65,31 @@ class MateDetailsWebPage extends StatelessWidget {
                       ])),
                     ),
                     Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            MateDetailsWebCard(controller: controller),
-                            const SizedBox(width: 24),
-                            Expanded(
-                              child: MateDetailsWebActivity(controller: controller),
-                            ),
-                          ],
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 1040),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // ─── IG-style horizontal header ────────────
+                              MateDetailsWebHeader(controller: controller),
+
+                              // Subtle divider between profile and content
+                              Container(
+                                height: 1,
+                                color: AppColor.borderSubtle,
+                                margin: const EdgeInsets.symmetric(horizontal: 24),
+                              ),
+
+                              // ─── Full-width tabs + grid ────────────────
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                                  child: MateDetailsWebActivity(controller: controller),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

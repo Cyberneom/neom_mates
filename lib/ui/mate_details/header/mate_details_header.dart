@@ -152,7 +152,7 @@ class MateDetailHeader extends StatelessWidget {
                       backgroundColor: AppTheme.canvasColor75(context),
                       context: context,
                       builder: (context) {
-                        return _buildDotsMenu(context, controller.mate.value, controller.userServiceImpl.user.userRole);
+                        return buildDotsMenu(context, controller.mate.value, controller.userServiceImpl.user.userRole);
                       }
                   ),
                   icon: const Icon(FontAwesomeIcons.ellipsisVertical, size: 20)
@@ -295,7 +295,7 @@ class _AnimatedBlogButtonState extends State<_AnimatedBlogButton>
   }
 }
 
-Widget _buildDotsMenu(BuildContext context, AppProfile itemmate, UserRole userRole) {
+Widget buildDotsMenu(BuildContext context, AppProfile itemmate, UserRole userRole) {
 
   List<Menu3DotsModel> listMore = [];
   listMore.add(Menu3DotsModel(CommonTranslationConstants.reportProfile.tr, MessageTranslationConstants.reportPostMsg,
