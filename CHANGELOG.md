@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.1.0] - 2026-07-09
+- Adjust design aesthetics of mate details headers.
+
+
 All notable changes to neom_mates will be documented in this file.
 
 ## [2.0.0] - 2025-02-08
