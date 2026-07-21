@@ -114,7 +114,7 @@ class MateDetailsWebHeader extends StatelessWidget {
                             controller.userServiceImpl.user.userRole,
                           ),
                         ),
-                        icon: Icon(
+                        icon: FaIcon(
                           FontAwesomeIcons.ellipsisVertical,
                           size: 18,
                           color: Colors.white70,
