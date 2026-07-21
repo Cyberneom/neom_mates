@@ -155,7 +155,7 @@ class MateDetailHeader extends StatelessWidget {
                         return buildDotsMenu(context, controller.mate.value, controller.userServiceImpl.user.userRole);
                       }
                   ),
-                  icon: Icon(FontAwesomeIcons.ellipsisVertical.data, size: 20)
+                  icon: Icon(FontAwesomeIcons.ellipsisVertical, size: 20)
               ),
             ]
         ),),

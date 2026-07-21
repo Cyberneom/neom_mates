@@ -115,7 +115,7 @@ class MateDetailsWebHeader extends StatelessWidget {
                           ),
                         ),
                         icon: Icon(
-                          FontAwesomeIcons.ellipsisVertical.data,
+                          FontAwesomeIcons.ellipsisVertical,
                           size: 18,
                           color: Colors.white70,
                         ),
