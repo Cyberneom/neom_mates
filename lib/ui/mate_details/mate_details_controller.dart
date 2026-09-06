@@ -19,6 +19,7 @@ import 'package:neom_core/data/firestore/itemlist_firestore.dart';
 import 'package:neom_core/data/firestore/nupale_session_firestore.dart';
 import 'package:neom_core/data/firestore/post_firestore.dart';
 import 'package:neom_core/data/firestore/profile_firestore.dart';
+import 'package:neom_core/data/firestore/public_catalog_read_policy.dart';
 import 'package:neom_core/data/firestore/user_firestore.dart';
 import 'package:neom_core/domain/model/activity_feed.dart';
 import 'package:neom_core/domain/model/app_media_item.dart';
@@ -28,6 +29,7 @@ import 'package:neom_core/domain/model/app_user.dart';
 import 'package:neom_core/domain/model/event.dart';
 import 'package:neom_core/domain/model/external_item.dart';
 import 'package:neom_core/domain/model/inbox.dart';
+import 'package:neom_core/domain/model/instrument.dart';
 import 'package:neom_core/domain/model/item_list.dart';
 import 'package:neom_core/domain/model/neom/neom_chamber_preset.dart';
 import 'package:neom_core/domain/model/nupale/nupale_session.dart';
@@ -54,6 +56,25 @@ import '../../utils/constants/mate_translation_constants.dart';
 
 class MateDetailsController extends SintController
     implements MateDetailsService {
+  MateDetailsController({
+    PostFirestore? postFirestore,
+    Future<AppProfile> Function(String)? profileLoader,
+    Future<bool> Function(String)? blogPresenceLoader,
+    Future<Map<String, Instrument>> Function(String)? instrumentsLoader,
+  }) : postFirestore = postFirestore ?? PostFirestore(),
+       _profileLoader =
+           profileLoader ?? ((id) => ProfileFirestore().retrieve(id)),
+       _blogPresenceLoader =
+           blogPresenceLoader ??
+           ((id) => BlogEntryFirestore().hasPublishedEntries(id)),
+       _instrumentsLoader =
+           instrumentsLoader ??
+           ((id) => InstrumentFirestore().retrieveInstruments(id));
+
+  final Future<AppProfile> Function(String) _profileLoader;
+  final Future<bool> Function(String) _blogPresenceLoader;
+  final Future<Map<String, Instrument>> Function(String) _instrumentsLoader;
+
   final userServiceImpl = Sint.find<UserService>();
   final GeoLocatorService? geoLocatorServiceImpl = kIsWeb
       ? null
@@ -65,7 +86,7 @@ class MateDetailsController extends SintController
 
   AppProfile profile = AppProfile();
 
-  PostFirestore postFirestore = PostFirestore();
+  PostFirestore postFirestore;
 
   String address = "";
   String instrumentsText = "";
@@ -202,7 +223,7 @@ class MateDetailsController extends SintController
 
       // Fetch fresh data from network
       try {
-        final freshProfile = await ProfileFirestore().retrieve(id);
+        final freshProfile = await _profileLoader(id);
         if (freshProfile.id.isNotEmpty) {
           mate.value = freshProfile;
           // Cache the profile for offline access
@@ -211,6 +232,8 @@ class MateDetailsController extends SintController
           }
           retrieveDetails();
           following.value = profile.following?.contains(mate.value.id) ?? false;
+        } else if (PublicCatalogReadPolicy.enabled) {
+          mate.value = AppProfile();
         }
       } catch (e, st) {
         NeomErrorLogger.recordError(
@@ -233,6 +256,12 @@ class MateDetailsController extends SintController
         module: 'neom_mates',
         operation: 'loadMate',
       );
+    } finally {
+      if (PublicCatalogReadPolicy.enabled && mate.value.id.isEmpty) {
+        isLoading.value = false;
+        isLoadingPosts.value = false;
+        isLoadingDetails.value = false;
+      }
     }
   }
 
@@ -369,8 +398,12 @@ class MateDetailsController extends SintController
   /// Check if mate has blog entries in the BlogEntry collection.
   /// Uses a simple limit(1) query to minimize Firestore reads.
   Future<void> _checkMateBlogEntries() async {
+    // The guest catalogue has no public projection for legacy blog entries.
+    if (PublicCatalogReadPolicy.enabled) {
+      hasBlogEntries.value = false;
+      return;
+    }
     try {
-      final blogFirestore = BlogEntryFirestore();
       final mateId = mate.value.id;
       AppConfig.logger.d(
         "_checkMateBlogEntries: Checking for mateId=$mateId, mateName=${mate.value.name}",
@@ -382,7 +415,7 @@ class MateDetailsController extends SintController
         return;
       }
 
-      hasBlogEntries.value = await blogFirestore.hasPublishedEntries(mateId);
+      hasBlogEntries.value = await _blogPresenceLoader(mateId);
       AppConfig.logger.d(
         "_checkMateBlogEntries: hasBlogEntries=${hasBlogEntries.value} for $mateId",
       );
@@ -684,10 +717,12 @@ class MateDetailsController extends SintController
   Future<void> getTotalInstruments() async {
     AppConfig.logger.t('getTotalInstruments');
 
+    // Instruments require a legacy profile-subcollection lookup. Public
+    // profile fields are already loaded from the approved projection.
+    if (PublicCatalogReadPolicy.enabled) return;
+
     try {
-      mate.value.instruments = await InstrumentFirestore().retrieveInstruments(
-        mate.value.id,
-      );
+      mate.value.instruments = await _instrumentsLoader(mate.value.id);
       AppConfig.logger.t(
         "${mate.value.instruments?.length ?? 0} Total Instruments for Profile",
       );
