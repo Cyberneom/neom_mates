@@ -257,7 +257,7 @@ class MateDetailsController extends SintController
         operation: 'loadMate',
       );
     } finally {
-      if (PublicCatalogReadPolicy.enabled && mate.value.id.isEmpty) {
+      if (mate.value.id.isEmpty) {
         isLoading.value = false;
         isLoadingPosts.value = false;
         isLoadingDetails.value = false;
