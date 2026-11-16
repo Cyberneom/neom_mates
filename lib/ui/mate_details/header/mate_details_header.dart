@@ -104,7 +104,14 @@ class MateDetailHeader extends StatelessWidget {
                   ? const SizedBox.shrink() : _AnimatedBlogButton(
                 text: MateTranslationConstants.checkMyBlog.tr,
                 onTap: () {
-                  Sint.toNamed(AppRouteConstants.mateBlog, arguments: [controller.mate.value]);
+                  final mate = controller.mate.value;
+                  Sint.toNamed(
+                    AuthGuard.isAuthenticated
+                        ? AppRouteConstants.mateBlog
+                        : AppRouteConstants.blog,
+                    arguments: [mate],
+                    parameters: {'ownerId': mate.id},
+                  );
                 },
               )),
               Obx(() => Padding(

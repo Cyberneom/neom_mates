@@ -210,7 +210,9 @@ class MateDetailsWebCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () {
                       Sint.toNamed(
-                        AppRouteConstants.mateBlog,
+                        AuthGuard.isAuthenticated
+                            ? AppRouteConstants.mateBlog
+                            : AppRouteConstants.blog,
                         arguments: [mate],
                         parameters: {'ownerId': mate.id},
                       );

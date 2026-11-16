@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:neom_commons/app_flavour.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
@@ -21,7 +20,7 @@ class MateDetailsPage extends StatelessWidget {
       id: AppPageIdConstants.mate,
       init: MateDetailsController(),
       builder: (controller) {
-        if (kIsWeb && MediaQuery.of(context).size.width > 900) {
+        if (MediaQuery.of(context).size.width > 900) {
           return Obx(() => controller.isLoading.value
               ? Scaffold(
                   backgroundColor: AppFlavour.getBackgroundColor(),

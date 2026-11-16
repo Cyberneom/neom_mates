@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:neom_commons/utils/app_utilities.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
 import 'package:neom_commons/utils/constants/translations/common_translation_constants.dart';
@@ -76,10 +76,12 @@ class MateDetailsController extends SintController
   final Future<Map<String, Instrument>> Function(String) _instrumentsLoader;
 
   final userServiceImpl = Sint.find<UserService>();
-  final GeoLocatorService? geoLocatorServiceImpl = kIsWeb
+  final GeoLocatorService? geoLocatorServiceImpl =
+      kIsWeb || !Sint.isRegistered<GeoLocatorService>()
       ? null
       : Sint.find<GeoLocatorService>();
   final profileCacheController = ProfileCacheController();
+  bool _isClosed = false;
 
   Map<String, AppProfile> mates = <String, AppProfile>{};
   Rx<AppProfile> mate = AppProfile().obs;
@@ -117,6 +119,66 @@ class MateDetailsController extends SintController
   final Rx<UserRole> newUserRole = UserRole.subscriber.obs;
   AppUser mateUser = AppUser();
 
+  static const int maxMateIdLength = 128;
+
+  static final RegExp _unsafeMateIdChars = RegExp(
+    r'[\x00-\x1F\x7F-\x9F\u0085\u061C\u200B-\u200F\u2028\u2029\u202A-\u202E\u2060\u2066-\u2069\uFEFF/\\:?#]',
+  );
+  static final RegExp _reservedDunderMateIdRe = RegExp(r'^__.*__$');
+  static final RegExp _encodedTraversalMateIdRe = RegExp(
+    r'%2e|%2f|%5c|%00',
+    caseSensitive: false,
+  );
+
+  @visibleForTesting
+  static String resolveMateId({String? routeParam, Object? arguments}) {
+    String rawCandidate = '';
+    if (routeParam != null && routeParam.trim().isNotEmpty) {
+      rawCandidate = routeParam;
+    }
+    if (arguments != null) {
+      if (arguments is AppProfile) {
+        if (arguments.id.trim().isNotEmpty) {
+          rawCandidate = arguments.id;
+        }
+      } else if (arguments is List && arguments.isNotEmpty) {
+        final first = arguments.first;
+        if (first is AppProfile) {
+          rawCandidate = first.id;
+        } else if (first is String && first.trim().isNotEmpty) {
+          rawCandidate = first;
+        }
+      } else if (arguments is Map) {
+        final rawId =
+            arguments['mateId'] ?? arguments['profileId'] ?? arguments['id'];
+        if (rawId is AppProfile) {
+          rawCandidate = rawId.id;
+        } else if (rawId != null && rawId.toString().trim().isNotEmpty) {
+          rawCandidate = rawId.toString();
+        }
+      } else if (arguments is String && arguments.trim().isNotEmpty) {
+        rawCandidate = arguments;
+      }
+    }
+    if (_unsafeMateIdChars.hasMatch(rawCandidate)) return '';
+    final candidate = rawCandidate.trim();
+    if (candidate.isEmpty ||
+        candidate.length > maxMateIdLength ||
+        candidate == '.' ||
+        candidate == '..' ||
+        candidate.contains('..') ||
+        candidate == 'constructor' ||
+        candidate == 'prototype' ||
+        _reservedDunderMateIdRe.hasMatch(candidate) ||
+        _encodedTraversalMateIdRe.hasMatch(candidate) ||
+        _unsafeMateIdChars.hasMatch(candidate) ||
+        candidate.startsWith('{') ||
+        candidate.startsWith('Instance of ')) {
+      return '';
+    }
+    return candidate;
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -126,25 +188,10 @@ class MateDetailsController extends SintController
 
     AppConfig.logger.t("MateDetails Controller Init");
 
-    String mateId = '';
-
-    if (routeId != null && routeId.isNotEmpty) {
-      mateId = routeId;
-    }
-
-    if (Sint.arguments != null) {
-      final args = Sint.arguments;
-      if (args is List && args.isNotEmpty) {
-        mateId = args[0].toString();
-      } else if (args is AppProfile) {
-        mateId = args.id;
-      } else if (args is String && args.isNotEmpty) {
-        mateId = args;
-      } else {
-        // Fallback: try to convert to string
-        mateId = args?.toString() ?? "";
-      }
-    }
+    final mateId = resolveMateId(
+      routeParam: routeId,
+      arguments: Sint.arguments,
+    );
 
     AppConfig.logger.d(
       "Mate ID: $mateId (type: ${Sint.arguments?.runtimeType})",
@@ -152,14 +199,21 @@ class MateDetailsController extends SintController
 
     try {
       profile = userServiceImpl.profile;
-      blockedProfile = profile.blockTo?.contains(mateId) ?? false;
+      blockedProfile =
+          mateId.isNotEmpty && (profile.blockTo?.contains(mateId) ?? false);
 
       if (mateId.isNotEmpty && !blockedProfile) {
         loadMate(mateId);
       } else {
-        AppConfig.logger.i("Profile $mateId is blocked");
+        isLoading.value = false;
+        isLoadingDetails.value = false;
+        isLoadingPosts.value = false;
+        AppConfig.logger.i("Profile $mateId is empty or blocked");
       }
     } catch (e, st) {
+      isLoading.value = false;
+      isLoadingDetails.value = false;
+      isLoadingPosts.value = false;
       NeomErrorLogger.recordError(
         e,
         st,
@@ -187,6 +241,7 @@ class MateDetailsController extends SintController
 
   @override
   void onClose() {
+    _isClosed = true;
     // FIXED: Clean up resources to prevent memory leaks
     // Close reactive collections
     totalPresets.close();
@@ -199,22 +254,35 @@ class MateDetailsController extends SintController
     isLoading.close();
     isLoadingDetails.close();
     isLoadingPosts.close();
+    hasBlogEntries.close();
+    verificationLevel.close();
+    newUserRole.close();
     mate.close();
     super.onClose();
   }
 
   @override
   Future<void> loadMate(String id) async {
-    AppConfig.logger.d("loadMate $id");
+    final cleanId = resolveMateId(arguments: id);
+    if (cleanId.isEmpty) {
+      if (!_isClosed) {
+        isLoading.value = false;
+        isLoadingPosts.value = false;
+        isLoadingDetails.value = false;
+      }
+      return;
+    }
+    AppConfig.logger.d("loadMate $cleanId");
 
     try {
       // Try to load from cache first for instant display
       final canUsePersonalCache = AppConfig.instance.canPersistUserActivity;
       final cachedProfile = canUsePersonalCache
-          ? await profileCacheController.getCachedProfile(id)
+          ? await profileCacheController.getCachedProfile(cleanId)
           : null;
+      if (_isClosed) return;
       if (cachedProfile != null) {
-        AppConfig.logger.d("Loaded profile from cache: $id");
+        AppConfig.logger.d("Loaded profile from cache: $cleanId");
         mate.value = cachedProfile;
         following.value = profile.following?.contains(mate.value.id) ?? false;
         isLoading.value = false;
@@ -223,13 +291,15 @@ class MateDetailsController extends SintController
 
       // Fetch fresh data from network
       try {
-        final freshProfile = await _profileLoader(id);
+        final freshProfile = await _profileLoader(cleanId);
+        if (_isClosed) return;
         if (freshProfile.id.isNotEmpty) {
           mate.value = freshProfile;
           // Cache the profile for offline access
           if (AppConfig.instance.canPersistUserActivity) {
             await profileCacheController.cacheProfile(freshProfile);
           }
+          if (_isClosed) return;
           retrieveDetails();
           following.value = profile.following?.contains(mate.value.id) ?? false;
         } else if (PublicCatalogReadPolicy.enabled) {
@@ -243,12 +313,14 @@ class MateDetailsController extends SintController
           operation: 'loadMate.network',
         );
         // If we have cached data, continue with it
-        if (mate.value.id.isNotEmpty) {
+        if (!_isClosed && mate.value.id.isNotEmpty) {
           retrieveDetails();
         }
       }
 
-      isLoading.value = false;
+      if (!_isClosed) {
+        isLoading.value = false;
+      }
     } catch (e, st) {
       NeomErrorLogger.recordError(
         e,
@@ -257,7 +329,7 @@ class MateDetailsController extends SintController
         operation: 'loadMate',
       );
     } finally {
-      if (mate.value.id.isEmpty) {
+      if (!_isClosed && mate.value.id.isEmpty) {
         isLoading.value = false;
         isLoadingPosts.value = false;
         isLoadingDetails.value = false;
@@ -303,7 +375,7 @@ class MateDetailsController extends SintController
         if (mate.value.id.isEmpty) {
           isLoadingPosts.value = false;
           isLoadingDetails.value = false;
-          update([AppPageIdConstants.search]);
+          update([AppPageIdConstants.mate]);
           return;
         }
         readingProgressMap.clear();
@@ -491,7 +563,7 @@ class MateDetailsController extends SintController
           );
         }
         totalPresets.addAll(
-          CoreUtilities.getTotalPresets(mate.value.chambers!),
+          CoreUtilities.getTotalPresets(mate.value.chambers ?? {}),
         );
       } else {
         totalMediaItems = CoreUtilities.getTotalMediaItems(
@@ -740,15 +812,21 @@ class MateDetailsController extends SintController
 
   @override
   Future<void> follow() async {
-    if (!AppConfig.instance.canPersistUserActivity) return;
-    AppConfig.logger.t("Follow profile ${mate.value.id}");
+    if (_isClosed || !AppConfig.instance.canPersistUserActivity) return;
+    final myId = resolveMateId(arguments: profile.id);
+    final targetId = resolveMateId(arguments: mate.value.id);
+    if (myId.isEmpty || targetId.isEmpty || myId == targetId) return;
+    AppConfig.logger.t("Follow profile $targetId");
     following.value = true;
     try {
       if (await ProfileFirestore().followProfile(
-        profileId: profile.id,
-        followedProfileId: mate.value.id,
+        profileId: myId,
+        followedProfileId: targetId,
       )) {
-        mate.value.followers!.add(profile.id);
+        final followers = mate.value.followers ??= <String>[];
+        if (!followers.contains(profile.id)) {
+          followers.add(profile.id);
+        }
 
         try {
           if (userServiceImpl.profile.following != null) {
@@ -812,21 +890,24 @@ class MateDetailsController extends SintController
 
   @override
   Future<void> unfollow() async {
-    if (!AppConfig.instance.canPersistUserActivity) return;
-    AppConfig.logger.t("Unfollow ${mate.value.id}");
+    if (_isClosed || !AppConfig.instance.canPersistUserActivity) return;
+    final myId = resolveMateId(arguments: profile.id);
+    final targetId = resolveMateId(arguments: mate.value.id);
+    if (myId.isEmpty || targetId.isEmpty || myId == targetId) return;
+    AppConfig.logger.t("Unfollow $targetId");
     following.value = false;
     try {
       if (await ProfileFirestore().unfollowProfile(
-        profileId: profile.id,
-        unfollowProfileId: mate.value.id,
+        profileId: myId,
+        unfollowProfileId: targetId,
       )) {
         if (userServiceImpl.profile.following != null) {
-          if (userServiceImpl.profile.following!.contains(mate.value.id)) {
-            userServiceImpl.profile.following!.remove(mate.value.id);
+          if (userServiceImpl.profile.following!.contains(targetId)) {
+            userServiceImpl.profile.following!.remove(targetId);
           }
         }
-        mate.value.followers!.remove(profile.id);
-      } else {
+        mate.value.followers?.remove(myId);
+      } else if (!_isClosed) {
         following.value = true;
       }
     } catch (e, st) {
@@ -838,24 +919,34 @@ class MateDetailsController extends SintController
       );
     }
 
-    update([AppPageIdConstants.mate, AppPageIdConstants.profile]);
+    if (!_isClosed) {
+      update([AppPageIdConstants.mate, AppPageIdConstants.profile]);
+    }
   }
 
   @override
   Future<void> blockProfile() async {
-    if (!AppConfig.instance.canPersistUserActivity) return;
+    if (_isClosed || !AppConfig.instance.canPersistUserActivity) return;
+    final myId = resolveMateId(arguments: profile.id);
+    final targetId = resolveMateId(arguments: mate.value.id);
+    if (myId.isEmpty || targetId.isEmpty || myId == targetId) return;
     AppConfig.logger.d("");
     try {
       if (await ProfileFirestore().blockProfile(
-        profileId: profile.id,
-        profileToBlock: mate.value.id,
+        profileId: myId,
+        profileToBlock: targetId,
       )) {
-        following.value = false;
-        userServiceImpl.profile.following!.remove(mate.value.id);
-        mate.value.followers?.remove(profile.id);
-        mate.value.blockedBy?.add(profile.id);
+        if (!_isClosed) {
+          following.value = false;
+        }
+        userServiceImpl.profile.following?.remove(targetId);
+        mate.value.followers?.remove(myId);
+        mate.value.blockedBy?.add(myId);
 
-        userServiceImpl.profile.blockTo!.add(mate.value.id);
+        final blockTo = userServiceImpl.profile.blockTo ??= <String>[];
+        if (!blockTo.contains(targetId)) {
+          blockTo.add(targetId);
+        }
 
         AppUtilities.showSnackBar(
           title: CommonTranslationConstants.blockProfile.tr,
@@ -875,19 +966,24 @@ class MateDetailsController extends SintController
 
     Sint.back();
     Sint.back();
-    update([AppPageIdConstants.mate, AppPageIdConstants.profile]);
+    if (!_isClosed) {
+      update([AppPageIdConstants.mate, AppPageIdConstants.profile]);
+    }
   }
 
   @override
   Future<void> unblockProfile(String profileId) async {
-    if (!AppConfig.instance.canPersistUserActivity) return;
+    if (_isClosed || !AppConfig.instance.canPersistUserActivity) return;
+    final myId = resolveMateId(arguments: userServiceImpl.profile.id);
+    final cleanTargetId = resolveMateId(arguments: profileId);
+    if (myId.isEmpty || cleanTargetId.isEmpty) return;
     AppConfig.logger.d("");
     try {
       if (await ProfileFirestore().unblockProfile(
-        profileId: userServiceImpl.profile.id,
-        profileToUnblock: profileId,
+        profileId: myId,
+        profileToUnblock: cleanTargetId,
       )) {
-        userServiceImpl.profile.blockTo!.remove(profileId);
+        userServiceImpl.profile.blockTo?.remove(cleanTargetId);
         AppUtilities.showSnackBar(
           title: CommonTranslationConstants.unblockProfile.tr,
           message: MateTranslationConstants.unblockedProfileMsg.tr,
@@ -905,7 +1001,9 @@ class MateDetailsController extends SintController
     }
 
     Sint.back();
-    update([AppPageIdConstants.mate, AppPageIdConstants.profile]);
+    if (!_isClosed) {
+      update([AppPageIdConstants.mate, AppPageIdConstants.profile]);
+    }
   }
 
   @override
@@ -949,7 +1047,7 @@ class MateDetailsController extends SintController
             profileId: profile.id,
             unfollowProfileId: mate.value.id,
           );
-          userServiceImpl.profile.following!.remove(mate.value.id);
+          userServiceImpl.profile.following?.remove(mate.value.id);
         }
 
         AppUtilities.showSnackBar(
