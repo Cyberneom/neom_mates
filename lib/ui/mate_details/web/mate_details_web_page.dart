@@ -11,6 +11,7 @@ import 'package:neom_home/ui/web/left_sidebar.dart';
 import 'package:sint/sint.dart';
 
 import '../mate_details_controller.dart';
+import '../mate_details_navigation.dart';
 import 'widgets/mate_details_web_activity.dart';
 import 'widgets/mate_details_web_header.dart';
 
@@ -32,7 +33,7 @@ class MateDetailsWebPage extends StatelessWidget {
     return WebKeyboardManager(
       pageId: 'mate_details',
       pageShortcuts: {
-        const SingleActivator(LogicalKeyboardKey.escape): () => Sint.back(),
+        const SingleActivator(LogicalKeyboardKey.escape): navigateBackFromMateDetails,
       },
       child: Scaffold(
         backgroundColor: AppFlavour.getBackgroundColor(),
@@ -55,7 +56,7 @@ class MateDetailsWebPage extends StatelessWidget {
                         BreadcrumbItem(
                           label: AppTranslationConstants.goBack.tr,
                           icon: Icons.arrow_back,
-                          onTap: () => Sint.back(),
+                          onTap: navigateBackFromMateDetails,
                         ),
                         BreadcrumbItem(
                           label: controller.mate.value.name.isNotEmpty

@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:neom_commons/app_flavour.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_commons/ui/widgets/app_circular_progress_indicator.dart';
 import 'package:neom_commons/ui/widgets/web_content_wrapper.dart';
+import 'package:neom_commons/ui/widgets/web/web_keyboard_manager.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
 import 'package:sint/sint.dart';
 import 'footer/mate_detail_footer.dart';
 import 'header/mate_details_header.dart';
 import 'mate_details_body.dart';
 import 'mate_details_controller.dart';
+import 'mate_details_navigation.dart';
 import 'web/mate_details_web_page.dart';
 
 class MateDetailsPage extends StatelessWidget {
@@ -31,12 +34,13 @@ class MateDetailsPage extends StatelessWidget {
                   : MateDetailsWebPage(controller: controller));
         }
 
-        return Scaffold(
+        final page = Scaffold(
           backgroundColor: AppFlavour.getBackgroundColor(),
           body: WebContentWrapper(
             maxWidth: 800,
             padding: EdgeInsets.zero,
             showBackButton: true,
+            onBack: kIsWeb ? navigateBackFromMateDetails : null,
             child: Container(
               decoration: AppTheme.appBoxDecoration,
               child: Obx(() => controller.isLoading.value
@@ -61,6 +65,16 @@ class MateDetailsPage extends StatelessWidget {
             ),
           ),
         );
+        return kIsWeb
+            ? WebKeyboardManager(
+                pageId: 'mate_details',
+                pageShortcuts: {
+                  const SingleActivator(LogicalKeyboardKey.escape):
+                      navigateBackFromMateDetails,
+                },
+                child: page,
+              )
+            : page;
       },
     );
   }
