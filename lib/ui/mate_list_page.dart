@@ -3,7 +3,7 @@ import 'package:neom_commons/app_flavour.dart';
 import 'package:neom_commons/ui/theme/app_color.dart';
 import 'package:neom_commons/ui/widgets/custom_image.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
-
+import 'package:neom_commons/ui/widgets/giglist/giglist_youtube_import_sheet.dart';
 import 'package:neom_commons/ui/widgets/web_content_wrapper.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
 import 'package:neom_core/app_config.dart';
@@ -12,6 +12,7 @@ import 'package:neom_core/data/implementations/mate_controller.dart';
 import 'package:neom_core/domain/model/app_profile.dart';
 import 'package:neom_core/utils/constants/app_route_constants.dart';
 import 'package:neom_core/utils/enums/app_in_use.dart';
+import 'package:neom_core/utils/enums/itemlist_type.dart';
 import 'package:neom_core/utils/enums/media_search_type.dart';
 import 'package:sint/sint.dart';
 
@@ -76,17 +77,42 @@ class MateListPage extends StatelessWidget {
                         ),
                         if (isGigmeout) ...[
                           const SizedBox(height: 22),
-                          FilledButton.icon(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppColor.getMain(),
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            ),
-                            onPressed: () => Sint.toNamed(
-                              AppRouteConstants.itemSearch,
-                              arguments: [MediaSearchType.song],
-                            ),
-                            icon: const Icon(Icons.playlist_add_rounded),
-                            label: const Text('Agregar Canciones a Mi Repertorio'),
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            alignment: WrapAlignment.center,
+                            children: [
+                              FilledButton.icon(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColor.getMain(),
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                ),
+                                onPressed: () async {
+                                  await GiglistYoutubeImportSheet.show(
+                                    context,
+                                    onImported: (_) => controller.loadMateProfiles(),
+                                  );
+                                },
+                                icon: const Icon(Icons.cloud_download_outlined),
+                                label: const Text('Importar Playlist de YouTube'),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: () => Sint.toNamed(
+                                  AppRouteConstants.lists,
+                                  arguments: [ItemlistType.giglist],
+                                ),
+                                icon: const Icon(Icons.queue_music_rounded),
+                                label: const Text('Mis Giglists'),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: () => Sint.toNamed(
+                                  AppRouteConstants.itemSearch,
+                                  arguments: [MediaSearchType.song],
+                                ),
+                                icon: const Icon(Icons.playlist_add_rounded),
+                                label: const Text('Buscar Canciones'),
+                              ),
+                            ],
                           ),
                         ],
                       ],
