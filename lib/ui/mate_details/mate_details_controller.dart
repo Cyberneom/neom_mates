@@ -10,6 +10,7 @@ import 'package:neom_core/data/firestore/activity_feed_firestore.dart';
 import 'package:neom_core/data/firestore/app_media_item_firestore.dart';
 import 'package:neom_core/data/firestore/app_release_item_firestore.dart';
 import 'package:neom_core/data/firestore/blog_entry_firestore.dart';
+import 'package:neom_core/data/firestore/collective_firestore.dart';
 import 'package:neom_core/data/firestore/event_firestore.dart';
 import 'package:neom_core/data/firestore/external_item_firestore.dart';
 import 'package:neom_core/data/firestore/frequency_firestore.dart';
@@ -26,6 +27,7 @@ import 'package:neom_core/domain/model/app_media_item.dart';
 import 'package:neom_core/domain/model/app_profile.dart';
 import 'package:neom_core/domain/model/app_release_item.dart';
 import 'package:neom_core/domain/model/app_user.dart';
+import 'package:neom_core/domain/model/collective.dart';
 import 'package:neom_core/domain/model/event.dart';
 import 'package:neom_core/domain/model/external_item.dart';
 import 'package:neom_core/domain/model/inbox.dart';
@@ -61,6 +63,7 @@ class MateDetailsController extends SintController
     Future<AppProfile> Function(String)? profileLoader,
     Future<bool> Function(String)? blogPresenceLoader,
     Future<Map<String, Instrument>> Function(String)? instrumentsLoader,
+    Future<Map<String, Collective>> Function(List<String>)? collectivesLoader,
   }) : postFirestore = postFirestore ?? PostFirestore(),
        _profileLoader =
            profileLoader ?? ((id) => ProfileFirestore().retrieve(id)),
@@ -69,11 +72,15 @@ class MateDetailsController extends SintController
            ((id) => BlogEntryFirestore().hasPublishedEntries(id)),
        _instrumentsLoader =
            instrumentsLoader ??
-           ((id) => InstrumentFirestore().retrieveInstruments(id));
+           ((id) => InstrumentFirestore().retrieveInstruments(id)),
+       _collectivesLoader =
+           collectivesLoader ??
+           ((ids) => CollectiveFirestore().getCollectivesFromList(ids));
 
   final Future<AppProfile> Function(String) _profileLoader;
   final Future<bool> Function(String) _blogPresenceLoader;
   final Future<Map<String, Instrument>> Function(String) _instrumentsLoader;
+  final Future<Map<String, Collective>> Function(List<String>) _collectivesLoader;
 
   final userServiceImpl = Sint.find<UserService>();
   final GeoLocatorService? geoLocatorServiceImpl =
@@ -105,6 +112,7 @@ class MateDetailsController extends SintController
 
   RxMap<Post, Event> eventPosts = <Post, Event>{}.obs;
   RxMap<String, Event> events = <String, Event>{}.obs;
+  RxMap<String, Collective> mateCollectives = <String, Collective>{}.obs;
 
   RxBool isLoading = true.obs;
   RxBool isLoadingDetails = true.obs;
@@ -249,6 +257,7 @@ class MateDetailsController extends SintController
     readingProgressMap.close();
     eventPosts.close();
     events.close();
+    mateCollectives.close();
     matePosts.close();
     following.close();
     isLoading.close();
@@ -420,6 +429,7 @@ class MateDetailsController extends SintController
         getAddressSimple(),
         getTotalInstruments(),
         getTotalItems(),
+        if (mate.value.collectives?.isNotEmpty ?? false) getMateCollectives(),
         if (AppConfig.instance.canPersistUserActivity) getReadingProgress(),
       ]);
     } catch (e, st) {
@@ -504,6 +514,35 @@ class MateDetailsController extends SintController
 
   void clear() {
     mates = <String, AppProfile>{};
+    mateCollectives.clear();
+  }
+
+  Future<void> getMateCollectives() async {
+    final ids = mate.value.collectives;
+    if (ids == null || ids.isEmpty) {
+      mateCollectives.clear();
+      return;
+    }
+
+    try {
+      final fetched = await _collectivesLoader(ids);
+      if (_isClosed) return;
+      mateCollectives.value = Map<String, Collective>.fromEntries(
+        fetched.entries.where((e) => e.value.isActive && e.value.name.trim().isNotEmpty),
+      );
+      AppConfig.logger.d("${mateCollectives.length} Collectives loaded for Mate");
+    } catch (e, st) {
+      NeomErrorLogger.recordError(
+        e,
+        st,
+        module: 'neom_mates',
+        operation: 'getMateCollectives',
+      );
+    }
+
+    if (!_isClosed) {
+      update([AppPageIdConstants.mate]);
+    }
   }
 
   @override
