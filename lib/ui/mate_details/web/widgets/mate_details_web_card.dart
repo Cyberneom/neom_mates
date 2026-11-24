@@ -21,6 +21,7 @@ import 'package:neom_core/utils/enums/verification_level.dart';
 import 'package:sint/sint.dart';
 
 import '../../../../utils/constants/mate_translation_constants.dart';
+import '../../mate_details_body.dart';
 import '../../mate_details_controller.dart';
 
 class MateDetailsWebCard extends StatelessWidget {
@@ -202,6 +203,13 @@ class MateDetailsWebCard extends StatelessWidget {
                     fontSize: 12,
                   ),
                 ),
+
+              // Collectives / Bands
+              buildMateCollectivesStrip(
+                context,
+                controller.mateCollectives.values.toList(),
+                centered: true,
+              ),
 
               // Blog button (bottom)
               if (AppConfig.instance.appInUse == AppInUse.e && controller.hasBlogEntries.value)
