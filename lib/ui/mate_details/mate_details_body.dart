@@ -3,6 +3,7 @@ import 'package:neom_commons/app_flavour.dart';
 import 'package:neom_commons/ui/theme/app_color.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_commons/ui/widgets/genres_grid_view.dart';
+import 'package:neom_commons/ui/widgets/profile_founding_progress_section.dart';
 import 'package:neom_commons/ui/widgets/read_more_container.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
 import 'package:neom_commons/utils/constants/translations/app_translation_constants.dart';
@@ -73,6 +74,12 @@ class MateDetailsBody extends StatelessWidget {
                   : TextUtilities.capitalizeFirstLetter(controller.mate.value.aboutMe),
               color: Colors.white70,
             )
+          ),
+          ProfileFoundingProgressSection(
+            ownerUid: controller.mateUser.id.isNotEmpty
+                ? controller.mateUser.id
+                : controller.mate.value.id,
+            isOwner: false,
           ),
         ]
       ),),

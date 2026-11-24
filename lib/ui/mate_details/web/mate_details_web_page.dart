@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:neom_commons/app_flavour.dart';
 import 'package:neom_commons/ui/theme/app_color.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
+import 'package:neom_commons/ui/widgets/profile_founding_progress_section.dart';
 import 'package:neom_commons/ui/widgets/web/web_breadcrumb.dart';
 import 'package:neom_commons/ui/widgets/web/web_keyboard_manager.dart';
 import 'package:neom_commons/utils/constants/translations/app_translation_constants.dart';
@@ -74,6 +75,21 @@ class MateDetailsWebPage extends StatelessWidget {
                             children: [
                               // ─── IG-style horizontal header ────────────
                               MateDetailsWebHeader(controller: controller),
+
+                              Obx(
+                                () => Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                  ),
+                                  child: ProfileFoundingProgressSection(
+                                    ownerUid: controller.mateUser.id.isNotEmpty
+                                        ? controller.mateUser.id
+                                        : controller.mate.value.id,
+                                    isOwner: false,
+                                    compact: true,
+                                  ),
+                                ),
+                              ),
 
                               // Subtle divider between profile and content
                               Container(
