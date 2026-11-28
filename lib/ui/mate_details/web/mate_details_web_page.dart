@@ -76,20 +76,21 @@ class MateDetailsWebPage extends StatelessWidget {
                               // ─── IG-style horizontal header ────────────
                               MateDetailsWebHeader(controller: controller),
 
-                              Obx(
-                                () => Padding(
+                              Obx(() {
+                                final mateId = controller.mate.value.id;
+                                return Padding(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 24,
                                   ),
                                   child: ProfileFoundingProgressSection(
                                     ownerUid: controller.mateUser.id.isNotEmpty
                                         ? controller.mateUser.id
-                                        : controller.mate.value.id,
+                                        : mateId,
                                     isOwner: false,
                                     compact: true,
                                   ),
-                                ),
-                              ),
+                                );
+                              }),
 
                               // Subtle divider between profile and content
                               Container(

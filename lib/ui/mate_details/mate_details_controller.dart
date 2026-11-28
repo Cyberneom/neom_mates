@@ -89,6 +89,7 @@ class MateDetailsController extends SintController
       : Sint.find<GeoLocatorService>();
   final profileCacheController = ProfileCacheController();
   bool _isClosed = false;
+  AppProfile? _initialArgumentProfile;
 
   Map<String, AppProfile> mates = <String, AppProfile>{};
   Rx<AppProfile> mate = AppProfile().obs;
@@ -187,6 +188,30 @@ class MateDetailsController extends SintController
     return candidate;
   }
 
+  @visibleForTesting
+  static AppProfile? extractProfileFromArguments(Object? arguments) {
+    if (arguments is AppProfile) {
+      return arguments;
+    }
+    if (arguments is List && arguments.isNotEmpty) {
+      final first = arguments.first;
+      if (first is AppProfile) {
+        return first;
+      }
+    }
+    if (arguments is Map) {
+      final raw = arguments['mate'] ??
+          arguments['profile'] ??
+          arguments['mateId'] ??
+          arguments['profileId'] ??
+          arguments['id'];
+      if (raw is AppProfile) {
+        return raw;
+      }
+    }
+    return null;
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -200,6 +225,15 @@ class MateDetailsController extends SintController
       routeParam: routeId,
       arguments: Sint.arguments,
     );
+    final argProfile = extractProfileFromArguments(Sint.arguments);
+    if (argProfile != null &&
+        mateId.isNotEmpty &&
+        (argProfile.id.trim().isEmpty || argProfile.id.trim() == mateId)) {
+      if (argProfile.id.trim().isEmpty) {
+        argProfile.id = mateId;
+      }
+      _initialArgumentProfile = argProfile;
+    }
 
     AppConfig.logger.d(
       "Mate ID: $mateId (type: ${Sint.arguments?.runtimeType})",
@@ -211,6 +245,12 @@ class MateDetailsController extends SintController
           mateId.isNotEmpty && (profile.blockTo?.contains(mateId) ?? false);
 
       if (mateId.isNotEmpty && !blockedProfile) {
+        if (_initialArgumentProfile != null) {
+          mate.value = _initialArgumentProfile!;
+          following.value =
+              profile.following?.contains(_initialArgumentProfile!.id) ?? false;
+          isLoading.value = false;
+        }
         loadMate(mateId);
       } else {
         isLoading.value = false;
@@ -283,6 +323,20 @@ class MateDetailsController extends SintController
     }
     AppConfig.logger.d("loadMate $cleanId");
 
+    final argFallback =
+        _initialArgumentProfile ?? extractProfileFromArguments(Sint.arguments);
+    final fallbackProfile =
+        (argFallback != null && argFallback.id.trim() == cleanId)
+            ? argFallback
+            : null;
+
+    if (fallbackProfile != null && !_isClosed) {
+      mate.value = fallbackProfile;
+      following.value = profile.following?.contains(mate.value.id) ?? false;
+      isLoading.value = false;
+      update([AppPageIdConstants.mate]);
+    }
+
     try {
       // Try to load from cache first for instant display
       final canUsePersonalCache = AppConfig.instance.canPersistUserActivity;
@@ -290,11 +344,12 @@ class MateDetailsController extends SintController
           ? await profileCacheController.getCachedProfile(cleanId)
           : null;
       if (_isClosed) return;
-      if (cachedProfile != null) {
+      if (cachedProfile != null && cachedProfile.id.isNotEmpty) {
         AppConfig.logger.d("Loaded profile from cache: $cleanId");
         mate.value = cachedProfile;
         following.value = profile.following?.contains(mate.value.id) ?? false;
         isLoading.value = false;
+        update([AppPageIdConstants.mate]);
         // Continue loading fresh data in background
       }
 
@@ -309,10 +364,20 @@ class MateDetailsController extends SintController
             await profileCacheController.cacheProfile(freshProfile);
           }
           if (_isClosed) return;
-          retrieveDetails();
           following.value = profile.following?.contains(mate.value.id) ?? false;
+          update([AppPageIdConstants.mate]);
+          retrieveDetails();
+        } else if (fallbackProfile != null) {
+          mate.value = fallbackProfile;
+          following.value = profile.following?.contains(mate.value.id) ?? false;
+          update([AppPageIdConstants.mate]);
+          retrieveDetails();
         } else if (PublicCatalogReadPolicy.enabled) {
           mate.value = AppProfile();
+          update([AppPageIdConstants.mate]);
+        } else if (mate.value.id == cleanId) {
+          update([AppPageIdConstants.mate]);
+          retrieveDetails();
         }
       } catch (e, st) {
         NeomErrorLogger.recordError(
@@ -321,8 +386,9 @@ class MateDetailsController extends SintController
           module: 'neom_mates',
           operation: 'loadMate.network',
         );
-        // If we have cached data, continue with it
+        // If we have cached or argument fallback data, continue with it
         if (!_isClosed && mate.value.id.isNotEmpty) {
+          update([AppPageIdConstants.mate]);
           retrieveDetails();
         }
       }
@@ -441,9 +507,10 @@ class MateDetailsController extends SintController
       );
     }
 
-    isLoadingDetails.value = false;
-
-    update([AppPageIdConstants.search]);
+    if (!_isClosed) {
+      isLoadingDetails.value = false;
+      update([AppPageIdConstants.mate]);
+    }
   }
 
   @override

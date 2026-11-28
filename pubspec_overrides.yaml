@@ -7,5 +7,21 @@ dependency_overrides:
     path: ../../main/neom_core
   neom_commons:
     path: ../../main/neom_commons
+  neom_codecs:
+    path: ../../main/neom_codecs
+  neom_sound:
+    path: ../../hardware/neom_sound
+  neom_home:
+    path: ../../main/neom_home
+  neom_achievements:
+    path: ../../creator/neom_achievements
+  neom_forum:
+    path: ../neom_forum
+  neom_ia:
+    path: ../../ai/neom_ia
+  neom_memory:
+    path: ../../ai/neom_memory
+  saia_core:
+    path: ../../ai/saia_core
   neom_profile:
     path: ../neom_profile

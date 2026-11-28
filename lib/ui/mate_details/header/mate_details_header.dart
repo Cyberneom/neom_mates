@@ -2,9 +2,9 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:neom_commons/ui/theme/app_color.dart';
-import 'package:neom_commons/ui/widgets/custom_image.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_commons/ui/widgets/animated_follow_button.dart';
+import 'package:neom_commons/ui/widgets/custom_image.dart';
 import 'package:neom_commons/ui/widgets/images/diagonally_cut_colored_image.dart';
 import 'package:neom_commons/utils/app_alerts.dart';
 import 'package:neom_commons/utils/app_utilities.dart';
@@ -100,51 +100,58 @@ class MateDetailHeader extends StatelessWidget {
                 ),
               ),
               AppTheme.heightSpace30,
-              Obx(() => AppConfig.instance.appInUse != AppInUse.e || !controller.hasBlogEntries.value
-                  ? const SizedBox.shrink() : _AnimatedBlogButton(
-                text: MateTranslationConstants.checkMyBlog.tr,
-                onTap: () {
-                  final mate = controller.mate.value;
-                  Sint.toNamed(
-                    AuthGuard.isAuthenticated
-                        ? AppRouteConstants.mateBlog
-                        : AppRouteConstants.blog,
-                    arguments: [mate],
-                    parameters: {'ownerId': mate.id},
-                  );
-                },
-              )),
-              Obx(() => Padding(
-                padding: EdgeInsets.only(
-                  top: !controller.hasBlogEntries.value ? 40.0 : 20.0,
-                  left: 16.0,
-                  right: 16.0,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    Obx(() => AnimatedFollowButton(
-                      isFollowing: controller.following.value,
-                      followText: AppTranslationConstants.follow.tr.toUpperCase(),
-                      followingText: AppTranslationConstants.following.tr.toUpperCase(),
-                      unfollowText: AppTranslationConstants.unfollow.tr.toUpperCase(),
-                      onPressed: () {
-                        AuthGuard.protect(context, () {
-                          controller.following.value ? controller.unfollow() : controller.follow();
-                        });
-                      },
-                    )),
-                    AnimatedMessageButton(
-                      text: AppTranslationConstants.message.tr.toUpperCase(),
-                      onPressed: () {
-                        AuthGuard.protect(context, () {
-                          controller.sendMessage();
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              )),
+              if (AppConfig.instance.appInUse == AppInUse.e)
+                Obx(() => !controller.hasBlogEntries.value
+                    ? const SizedBox.shrink()
+                    : _AnimatedBlogButton(
+                        text: MateTranslationConstants.checkMyBlog.tr,
+                        onTap: () {
+                          final mate = controller.mate.value;
+                          Sint.toNamed(
+                            AuthGuard.isAuthenticated
+                                ? AppRouteConstants.mateBlog
+                                : AppRouteConstants.blog,
+                            arguments: [mate],
+                            parameters: {'ownerId': mate.id},
+                          );
+                        },
+                      )),
+              Obx(() {
+                final hasBlog = controller.hasBlogEntries.value;
+                final showBlog =
+                    AppConfig.instance.appInUse == AppInUse.e && hasBlog;
+                return Padding(
+                  padding: EdgeInsets.only(
+                    top: showBlog ? 20.0 : 40.0,
+                    left: 16.0,
+                    right: 16.0,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      Obx(() => AnimatedFollowButton(
+                        isFollowing: controller.following.value,
+                        followText: AppTranslationConstants.follow.tr.toUpperCase(),
+                        followingText: AppTranslationConstants.following.tr.toUpperCase(),
+                        unfollowText: AppTranslationConstants.unfollow.tr.toUpperCase(),
+                        onPressed: () {
+                          AuthGuard.protect(context, () {
+                            controller.following.value ? controller.unfollow() : controller.follow();
+                          });
+                        },
+                      )),
+                      AnimatedMessageButton(
+                        text: AppTranslationConstants.message.tr.toUpperCase(),
+                        onPressed: () {
+                          AuthGuard.protect(context, () {
+                            controller.sendMessage();
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              }),
             ],
           ),
         ),
